@@ -237,9 +237,9 @@ function loadColors(){
   CL = {bg:g('--panel'), ink:g('--ink'), muted:g('--muted'), line:g('--line'), w1:g('--w1'), bus:g('--wbus'), x:g('--wx'), z:g('--wz'), an:g('--wan'),
         A:g('--curA'), B:g('--curB'), grid:g('--grid'), gridmaj:g('--gridmaj'), alt:g('--rowalt'), sel:g('--sel'), panel2:g('--panel2')};
 }
-function setTheme(t){
+function setTheme(t, persist){    // persist only an explicit user choice, so the OS light/dark preference keeps being followed until then
   S.theme = t; document.documentElement.dataset.theme = t; loadColors(); requestDraw();
-  try { localStorage.setItem('vcdstudio.theme', t); } catch (e) {}
+  if (persist){ try { localStorage.setItem('vcdstudio.theme', t); } catch (e) {} }
 }
 
 /* ---------- ruler / ticks ---------- */

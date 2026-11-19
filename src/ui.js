@@ -510,7 +510,7 @@ function onKey(ev){
   const k = ev.key, K = k.length === 1 ? k.toLowerCase() : k;
   let handled = true;
   if (K === 'o') el.fin.click();
-  else if (K === 't') setTheme(S.theme === 'dark' ? 'light' : 'dark');
+  else if (K === 't') setTheme(S.theme === 'dark' ? 'light' : 'dark', true);
   else if (K === 'f') fitView(true);
   else if (K === 'z'){ if (S.A != null && S.B != null){ const a = Math.min(S.A, S.B), b = Math.max(S.A, S.B), m = (b - a) * 0.05 || 1; setView(a - m, b + m, true); } else toast('Set cursors A (click) and B (Shift+click) first'); }
   else if (K === '+' || K === '='){ zoomBy(0.5, null, true); }
@@ -558,7 +558,7 @@ function init(){
   el.fin.onchange = () => { if (el.fin.files[0]) loadFile(el.fin.files[0]); el.fin.value = ''; };
   $('#bFit').onclick = () => fitView(true); $('#bZin').onclick = () => zoomBy(0.5, null, true); $('#bZout').onclick = () => zoomBy(2, null, true);
   $('#bZcur').onclick = () => onKey({key:'z', target:document.body, preventDefault(){}});
-  $('#bTheme').onclick = () => setTheme(S.theme === 'dark' ? 'light' : 'dark');
+  $('#bTheme').onclick = () => setTheme(S.theme === 'dark' ? 'light' : 'dark', true);
   $('#bPng').onclick = exportPNG; $('#bTxt').onclick = exportText; $('#bLink').onclick = copyLink; $('#bHelp').onclick = () => el.help.showModal();
   $('#helpClose').onclick = () => el.help.close();
   $('#bPrev').onclick = () => doEdge(-1); $('#bNext').onclick = () => doEdge(1);

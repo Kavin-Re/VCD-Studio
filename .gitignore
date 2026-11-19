@@ -46,3 +46,14 @@ dist/
 *.wlf
 *.fsdb
 *.vpd
+
+# --- VCD-Studio: regenerable artefacts ---
+# screenshots/exports written by tests/test_viewer.py and tests/smoke.py
+out/
+# iverilog build products from sim/run_sims.sh
+sim/_b/
+# large synthetic dumps from tests/gen_big_vcd.py
+big.vcd
+# release bundles (the repository itself is the source of truth)
+*.tgz
+_site/

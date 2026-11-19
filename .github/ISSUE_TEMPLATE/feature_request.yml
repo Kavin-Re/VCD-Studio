@@ -1,0 +1,33 @@
+name: Feature request
+description: Suggest an improvement
+labels:
+- enhancement
+body:
+- type: textarea
+  id: problem
+  attributes:
+    label: Problem or motivation
+    description: What are you trying to do that is hard today?
+  validations:
+    required: true
+- type: textarea
+  id: proposal
+  attributes:
+    label: Proposed solution
+    description: Describe what you would like to see.
+  validations:
+    required: true
+- type: textarea
+  id: alternatives
+  attributes:
+    label: Alternatives considered
+    description: Other approaches you thought about.
+  validations:
+    required: false
+- type: textarea
+  id: vcd
+  attributes:
+    label: Example waveform
+    description: A small VCD that shows the use case, if you can share one.
+  validations:
+    required: false

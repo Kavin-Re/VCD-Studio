@@ -46,6 +46,8 @@ class VcdParser {
       if (i >= n && !last){ this.carry = b.slice(s); break; }
       this.tok(b, s, i);
     }
+    // A pending "b1010" still points into the caller's buffer; copy it so the caller may reuse that buffer for the next chunk.
+    if (this.pk === 1) this.pb = this.pb.slice();
   }
   tok(b, s, e){
     const c = b[s];

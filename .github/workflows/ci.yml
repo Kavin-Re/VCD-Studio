@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: Unit tests + build check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: index.html matches src/ and demos/
+        run: python3 build.py --check
+      - name: vcd_stats.py unit tests (stdlib only)
+        run: python3 -m unittest discover -s tests -p "test_vcd_stats.py" -v
+      - name: Parser / formatting unit tests (Node, no dependencies)
+        run: node --test tests/parser.test.mjs
+
+  browser:
+    name: Headless Chrome smoke + XSS test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # ubuntu-latest ships google-chrome; the script drives it over the DevTools protocol (no npm packages).
+      - run: node tests/browser_smoke.mjs
+
+  e2e:
+    name: Playwright end-to-end suite
+    runs-on: ubuntu-latest
+    # This suite could not be executed in the environment where the CI file was written (no Playwright there).
+    # It is therefore advisory until it has been seen green once on GitHub; then delete the next line.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install playwright && python -m playwright install --with-deps chromium
+      - name: Generate the large dump and run all checks
+        run: |
+          mkdir -p out
+          python3 tests/gen_big_vcd.py out/big.vcd
+          python3 tests/test_viewer.py --big
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-screenshots
+          path: |
+            out/*.png
+            out/*.txt

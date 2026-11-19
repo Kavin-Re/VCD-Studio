@@ -260,12 +260,22 @@ class VcdParser {
       if (i >= n && !last){ this.carry = b.slice(s); break; }
       this.tok(b, s, i);
     }
+    // A pending "b1010" still points into the caller's buffer; copy it so the caller may reuse that buffer for the next chunk.
+    if (this.pk === 1) this.pb = this.pb.slice();
   }
   tok(b, s, e){
     const c = b[s];
     if (this.cmd !== null && !this.vals){                // collecting arguments of a $command
       if (c === 36 && e - s === 4 && b[s+1] === 101 && b[s+2] === 110 && b[s+3] === 100) this.endCmd();
       else if (this.args.length < 400) this.args.push(VcdParser.str(b, s, e));
+      return;
+    }
+    if (this.defsDone && this.pk){                                        // second token of "b101 id" / "r1.5 id"
+      const k = this.pk; this.pk = 0;
+      const d = this.map.get(VcdParser.key(b, s, e));
+      if (!d) return;
+      if (k === 1){ if (!d.real) { packBits(this.pb, this.pb.length, d.w, this.sv, this.sm, this.sz, d.nw); this.commit(d); } }
+      else if (k === 2){ if (d.real) this.commitReal(d, this.pr); }
       return;
     }
     if (c === 36){                                       // $
@@ -277,14 +287,6 @@ class VcdParser {
       return;
     }
     if (!this.defsDone) return;
-    if (this.pk){                                        // second token of "b101 id" / "r1.5 id"
-      const k = this.pk; this.pk = 0;
-      const d = this.map.get(VcdParser.key(b, s, e));
-      if (!d) return;
-      if (k === 1){ if (!d.real) { packBits(this.pb, this.pb.length, d.w, this.sv, this.sm, this.sz, d.nw); this.commit(d); } }
-      else if (k === 2){ if (d.real) this.commitReal(d, this.pr); }
-      return;
-    }
     if (c === 35){                                       // #time
       let t = 0; for (let i = s + 1; i < e; i++) t = t * 10 + (b[i] - 48);
       this.t = t; if (t < this.tmin) this.tmin = t; if (t > this.tmax) this.tmax = t;
@@ -644,9 +646,9 @@ function loadColors(){
   CL = {bg:g('--panel'), ink:g('--ink'), muted:g('--muted'), line:g('--line'), w1:g('--w1'), bus:g('--wbus'), x:g('--wx'), z:g('--wz'), an:g('--wan'),
         A:g('--curA'), B:g('--curB'), grid:g('--grid'), gridmaj:g('--gridmaj'), alt:g('--rowalt'), sel:g('--sel'), panel2:g('--panel2')};
 }
-function setTheme(t){
+function setTheme(t, persist){    // persist only an explicit user choice, so the OS light/dark preference keeps being followed until then
   S.theme = t; document.documentElement.dataset.theme = t; loadColors(); requestDraw();
-  try { localStorage.setItem('vcdstudio.theme', t); } catch (e) {}
+  if (persist){ try { localStorage.setItem('vcdstudio.theme', t); } catch (e) {} }
 }
 
 /* ---------- ruler / ticks ---------- */
@@ -1350,7 +1352,7 @@ function onKey(ev){
   const k = ev.key, K = k.length === 1 ? k.toLowerCase() : k;
   let handled = true;
   if (K === 'o') el.fin.click();
-  else if (K === 't') setTheme(S.theme === 'dark' ? 'light' : 'dark');
+  else if (K === 't') setTheme(S.theme === 'dark' ? 'light' : 'dark', true);
   else if (K === 'f') fitView(true);
   else if (K === 'z'){ if (S.A != null && S.B != null){ const a = Math.min(S.A, S.B), b = Math.max(S.A, S.B), m = (b - a) * 0.05 || 1; setView(a - m, b + m, true); } else toast('Set cursors A (click) and B (Shift+click) first'); }
   else if (K === '+' || K === '='){ zoomBy(0.5, null, true); }
@@ -1398,7 +1400,7 @@ function init(){
   el.fin.onchange = () => { if (el.fin.files[0]) loadFile(el.fin.files[0]); el.fin.value = ''; };
   $('#bFit').onclick = () => fitView(true); $('#bZin').onclick = () => zoomBy(0.5, null, true); $('#bZout').onclick = () => zoomBy(2, null, true);
   $('#bZcur').onclick = () => onKey({key:'z', target:document.body, preventDefault(){}});
-  $('#bTheme').onclick = () => setTheme(S.theme === 'dark' ? 'light' : 'dark');
+  $('#bTheme').onclick = () => setTheme(S.theme === 'dark' ? 'light' : 'dark', true);
   $('#bPng').onclick = exportPNG; $('#bTxt').onclick = exportText; $('#bLink').onclick = copyLink; $('#bHelp').onclick = () => el.help.showModal();
   $('#helpClose').onclick = () => el.help.close();
   $('#bPrev').onclick = () => doEdge(-1); $('#bNext').onclick = () => doEdge(1);

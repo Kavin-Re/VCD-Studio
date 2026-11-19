@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
-"""Assembles the single-file index.html from src/ and embeds the demo dumps (raw-deflate + base64)."""
-import base64, json, os, zlib
+"""Assembles the single-file index.html from src/ and embeds the demo dumps (raw-deflate + base64).
+
+    python3 build.py           rebuild index.html
+    python3 build.py --check   exit non-zero if index.html does not match src/ + demos/ (used by CI)
+"""
+import base64, hashlib, json, os, re, sys, zlib
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, "src")
@@ -32,6 +36,28 @@ assert "</script" not in js.lower()
 html = ("<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n"
         "<title>VCD-Studio</title>\n<style>\n" + rd("style.css") + "</style>\n</head>\n<body>\n" + rd("body.html") + "<script>\n'use strict';\n" + js + "</script>\n</body>\n</html>\n")
 out = os.path.join(ROOT, "index.html")
-with open(out, "w", encoding="utf-8") as f:
-    f.write(html)
-print("index.html: %d bytes; demos %d raw -> %d deflated bytes" % (len(html.encode()), raw_total, z_total))
+
+
+def _normalise(page):
+    """Replace every embedded demo blob with a hash of its *inflated* bytes.
+
+    Deflate output differs between zlib builds (zlib vs zlib-ng), so comparing the raw file
+    byte-for-byte would give false alarms; the inflated payload is what matters.
+    """
+    def sub(m):
+        raw = zlib.decompress(base64.b64decode(m.group(1)), -15)
+        return '"z":"sha256:%s"' % hashlib.sha256(raw).hexdigest()
+    return re.sub(r'"z":"([A-Za-z0-9+/=]+)"', sub, page)
+
+
+if "--check" in sys.argv[1:]:
+    # CI guard: fail if the committed index.html was not rebuilt after editing src/ or demos/.
+    with open(out, encoding="utf-8", newline="") as f:
+        committed = f.read()
+    if _normalise(committed) != _normalise(html):
+        sys.exit("index.html is stale: run `python3 build.py` and commit the result")
+    print("index.html is up to date with src/ and demos/")
+else:
+    with open(out, "w", encoding="utf-8", newline="") as f:
+        f.write(html)
+    print("index.html: %d bytes; demos %d raw -> %d deflated bytes" % (len(html.encode()), raw_total, z_total))
