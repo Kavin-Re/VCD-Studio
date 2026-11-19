@@ -1,0 +1,1432 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VCD-Studio</title>
+<style>
+:root{
+  --bg:#f4f5f7;--panel:#ffffff;--panel2:#eef0f3;--ink:#1a1f26;--muted:#5d6877;--line:#d6dae0;--accent:#2457c5;--accent-ink:#fff;
+  --w1:#15803d;--wbus:#1f5fbf;--wx:#d92d20;--wz:#b86e00;--wan:#7c3aed;--curA:#e8590c;--curB:#0c8599;--grid:rgba(60,70,90,.10);--gridmaj:rgba(60,70,90,.20);
+  --rowalt:rgba(60,70,90,.035);--sel:rgba(36,87,197,.10);--shadow:0 6px 24px rgba(0,0,0,.18);--namew:380px;
+}
+:root[data-theme="dark"]{
+  --bg:#0e1217;--panel:#161b22;--panel2:#1d232c;--ink:#e4e8ee;--muted:#8d99a9;--line:#2a323d;--accent:#5b8def;--accent-ink:#06101f;
+  --w1:#4ade80;--wbus:#6aa8ff;--wx:#f87171;--wz:#fbbf24;--wan:#c4b5fd;--curA:#fb923c;--curB:#22d3ee;--grid:rgba(160,175,200,.09);--gridmaj:rgba(160,175,200,.19);
+  --rowalt:rgba(160,175,200,.04);--sel:rgba(91,141,239,.16);--shadow:0 6px 24px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:13px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+.mono,.val,.valb,#status,td.n,.chip{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
+button,select,input{font:inherit;color:inherit}
+button{background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:3px 9px;cursor:pointer;line-height:1.3}
+button:hover{background:var(--panel2)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.primary:hover{filter:brightness(1.08)}
+button.on{background:var(--sel);border-color:var(--accent)}
+input[type=text],input[type=search],input[type=number],select{background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:3px 7px}
+header.top{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{font-weight:700;letter-spacing:.2px;margin-right:4px}
+.brand span{color:var(--accent)}
+.sep{width:1px;align-self:stretch;background:var(--line);margin:2px 2px}
+.chip{background:var(--panel2);border-radius:5px;padding:2px 7px;font-size:12px;white-space:nowrap}
+.chip b{font-weight:600}
+.chip.a b{color:var(--curA)}.chip.b b{color:var(--curB)}
+.spacer{flex:1}
+#fname{max-width:34ch;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap;font-size:12px}
+.tools label{color:var(--muted)}
+.tools input[type=text]{width:130px}
+#app{flex:1;min-height:0;display:flex}
+#side{width:270px;flex:none;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+#side .sh{padding:8px;border-bottom:1px solid var(--line)}
+#side input{width:100%}
+#side .hint{color:var(--muted);font-size:11px;margin-top:4px}
+#tree{flex:1;overflow:auto;padding:4px 0;min-height:0}
+.nd{user-select:none}
+.nd>.nh{display:flex;align-items:center;gap:4px;padding:2px 6px;cursor:pointer}
+.nd>.nh:hover{background:var(--panel2)}
+.nd>.nh .tw{width:12px;color:var(--muted);font-size:10px}
+.nd>.nh .cnt{color:var(--muted);font-size:11px}
+.nd>.nh .all{margin-left:auto;visibility:hidden;padding:0 6px;font-size:11px}
+.nd>.nh:hover .all{visibility:visible}
+.nd>.kids{margin-left:12px;border-left:1px solid var(--line)}
+.sg{display:flex;align-items:center;gap:6px;padding:2px 6px 2px 14px;cursor:pointer;white-space:nowrap}
+.sg:hover{background:var(--panel2)}
+.sg .ck{width:14px;color:var(--accent);font-weight:700}
+.sg .nm{overflow:hidden;text-overflow:ellipsis}
+.sg .w{margin-left:auto;color:var(--muted);font-size:11px;font-family:ui-monospace,Menlo,Consolas,monospace}
+.sg.added{background:var(--sel)}
+.sg .pp{color:var(--muted);font-size:11px;overflow:hidden;text-overflow:ellipsis}
+#main{flex:1;min-width:0;display:flex;flex-direction:column}
+#hdr{display:flex;flex:none;border-bottom:1px solid var(--line);background:var(--panel)}
+.namehead{width:var(--namew);flex:none;display:flex;align-items:center;padding:0 8px;color:var(--muted);font-size:11px;gap:8px;border-right:1px solid var(--line)}
+.namehead .g{flex:1}.namehead .va{width:92px;color:var(--curA)}.namehead .vb{width:92px;color:var(--curB)}.namehead .pad{width:74px}
+#ruler{flex:1;min-width:0;height:44px;display:block;cursor:col-resize}
+#rows{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;align-items:flex-start;position:relative;background:var(--panel)}
+#names{flex:none;width:var(--namew);border-right:1px solid var(--line);min-height:100%}
+#cwrap{flex:1;min-width:0;position:sticky;top:0;align-self:flex-start}
+#cv{display:block;width:100%;height:100%;cursor:crosshair;touch-action:pan-y}
+.nrow{display:flex;align-items:center;gap:6px;padding:0 6px 0 4px;border-bottom:1px solid var(--line);cursor:pointer;overflow:hidden}
+.nrow.sel{background:var(--sel)}
+.nrow.dragover{box-shadow:inset 0 2px 0 var(--accent)}
+.nrow .grip{color:var(--muted);cursor:grab;width:12px;text-align:center;font-size:11px;letter-spacing:-2px}
+.nrow .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nrow .nm small{color:var(--muted);margin-left:3px}
+.nrow .val,.nrow .valb{width:92px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.nrow .val{color:var(--curA)}.nrow .valb{color:var(--curB)}
+.nrow .val.x,.nrow .valb.x{color:var(--wx);font-weight:700}.nrow .val.z,.nrow .valb.z{color:var(--wz);font-weight:700}
+.nrow button{padding:0 4px;font-size:11px;min-width:22px;height:20px}
+#empty{position:absolute;left:var(--namew);right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+#empty div{background:var(--panel);border:1px dashed var(--line);border-radius:8px;padding:14px 20px;color:var(--muted);text-align:center;max-width:46ch}
+#panel{flex:none;height:210px;border-top:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
+#panel.min{height:30px}
+.tabs{display:flex;gap:2px;padding:3px 8px 0;border-bottom:1px solid var(--line);align-items:flex-end}
+.tab{border:1px solid transparent;border-bottom:none;border-radius:5px 5px 0 0;background:none;padding:3px 12px;color:var(--muted)}
+.tab.on{background:var(--bg);border-color:var(--line);color:var(--ink);font-weight:600}
+#pbody{flex:1;overflow:auto;padding:8px 12px;min-height:0}
+#panel.min #pbody{display:none}
+table{border-collapse:collapse;font-size:12px}
+th{text-align:left;color:var(--muted);font-weight:600;padding:2px 14px 2px 0}
+td{padding:2px 14px 2px 0;vertical-align:top}
+td.n{text-align:right}
+tr.clk{cursor:pointer}tr.clk:hover{background:var(--panel2)}
+.kv td:first-child{color:var(--muted)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.note{color:var(--muted);font-size:12px}
+#status{flex:none;display:flex;gap:16px;padding:3px 10px;background:var(--panel);border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden}
+#status span:last-child{margin-left:auto}
+#drop{position:fixed;inset:0;background:rgba(36,87,197,.22);border:3px dashed var(--accent);display:none;align-items:center;justify-content:center;font-size:22px;font-weight:600;z-index:50;pointer-events:none}
+#drop.on{display:flex}
+#toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:6px 14px;border-radius:6px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:60}
+#toast.on{opacity:.95}
+dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);max-width:720px;width:92vw;padding:16px 20px}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{margin:0 0 8px;font-size:16px}
+dialog .cols{display:grid;grid-template-columns:1fr 1fr;gap:4px 28px}
+dialog kbd{background:var(--panel2);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;font:12px ui-monospace,Menlo,Consolas,monospace}
+#sidetoggle{display:none}
+@media (max-width:860px){
+  :root{--namew:250px}
+  #side{position:absolute;z-index:20;height:calc(100% - 90px);display:none;box-shadow:var(--shadow)}
+  #side.open{display:flex}
+  #sidetoggle{display:inline-block}
+  .nrow .valb,.namehead .vb{display:none}
+  dialog .cols{grid-template-columns:1fr}
+}
+@media (max-width:560px){:root{--namew:190px}.nrow .val,.namehead .va{width:60px}.namehead .pad{width:48px}.nrow .an{display:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <button id="sidetoggle" title="Signal tree">Tree</button>
+  <div class="brand">VCD<span>-Studio</span></div>
+  <button id="bOpen" class="primary" title="Open a .vcd file (O)">Open .vcd</button>
+  <select id="demoSel" title="Built-in demo dumps (generated with iverilog)"><option value="">Demo dumps...</option></select>
+  <span class="chip" id="fname" title="">no file</span>
+  <span class="sep"></span>
+  <button id="bFit" title="Zoom to fit (F)">Fit</button>
+  <button id="bZout" title="Zoom out (-)">&minus;</button>
+  <button id="bZin" title="Zoom in (+)">+</button>
+  <button id="bZcur" title="Zoom to cursors A..B (Z)">A&harr;B</button>
+  <span class="sep"></span>
+  <span class="chip a">A <b id="cA">-</b></span>
+  <span class="chip b">B <b id="cB">-</b></span>
+  <span class="chip">&Delta; <b id="cD">-</b> <span id="cF"></span></span>
+  <span class="spacer"></span>
+  <button id="bTheme" title="Toggle dark/light (T)">Theme</button>
+  <button id="bPng" title="Export PNG of the current view (E)">PNG</button>
+  <button id="bTxt" title="Export text summary (Shift+E)">Summary</button>
+  <button id="bLink" title="Copy a link that restores the selected signals (L)">Copy link</button>
+  <button id="bHelp" title="Keyboard shortcuts (?)">?</button>
+</header>
+<div class="tools">
+  <label>Edge of selected signal</label>
+  <button id="bPrev" title="Previous edge (P)">&#9664; prev</button>
+  <button id="bNext" title="Next edge (N)">next &#9654;</button>
+  <select id="edgeKind" title="Edge kind (1-bit signals)"><option value="any">any</option><option value="rise">rising</option><option value="fall">falling</option></select>
+  <span class="sep"></span>
+  <label for="matchIn">value</label>
+  <input type="text" id="matchIn" placeholder="e.g. 0xA5, 0b1010, x, z, 'd42" autocomplete="off" spellcheck="false">
+  <button id="bMPrev" title="Previous match ([)">&#9664;</button>
+  <button id="bMNext" title="Next match (])">&#9654;</button>
+  <span class="sep"></span>
+  <label><input type="checkbox" id="snap" checked> snap cursor to edges</label>
+  <span class="spacer"></span>
+  <span class="note" id="matchMsg"></span>
+</div>
+<div id="app">
+  <aside id="side">
+    <div class="sh">
+      <input type="search" id="q" placeholder="Search signals (words, or /regex/)" autocomplete="off" spellcheck="false">
+      <div class="hint" id="qhint">Click a signal to add / remove it. Hover a scope for "all".</div>
+    </div>
+    <div id="tree"></div>
+  </aside>
+  <main id="main">
+    <div id="hdr">
+      <div class="namehead"><span class="g">Signals (drag to reorder)</span><span class="va">at A</span><span class="vb">at B</span><span class="pad"></span></div>
+      <canvas id="ruler"></canvas>
+    </div>
+    <div id="rows">
+      <div id="names"></div>
+      <div id="cwrap"><canvas id="cv" tabindex="0"></canvas></div>
+      <div id="empty"><div id="emptyMsg"></div></div>
+    </div>
+    <div id="panel">
+      <div class="tabs">
+        <button class="tab on" data-tab="measure">Measure</button>
+        <button class="tab" data-tab="glitch">Glitches</button>
+        <button class="tab" data-tab="info">Info</button>
+        <span class="spacer"></span>
+        <button id="bMin" title="Collapse / expand panel" style="margin-bottom:2px">&#9662;</button>
+      </div>
+      <div id="pbody"></div>
+    </div>
+  </main>
+</div>
+<div id="status"><span id="sHover">&nbsp;</span><span id="sView"></span><span id="sFile"></span></div>
+<div id="drop">Drop a .vcd file to open it</div>
+<div id="toast"></div>
+<input type="file" id="fin" hidden>
+<dialog id="help">
+  <h2>Keyboard shortcuts and mouse</h2>
+  <div class="cols">
+    <div><kbd>O</kbd> open file</div><div><kbd>T</kbd> dark / light theme</div>
+    <div><kbd>F</kbd> fit whole dump</div><div><kbd>Z</kbd> zoom to cursors A&harr;B</div>
+    <div><kbd>+</kbd> / <kbd>-</kbd> zoom in / out</div><div><kbd>&larr;</kbd> <kbd>&rarr;</kbd> pan (Shift = faster)</div>
+    <div><kbd>Home</kbd> / <kbd>End</kbd> go to start / end</div><div><kbd>/</kbd> search signals</div>
+    <div><kbd>N</kbd> / <kbd>P</kbd> next / previous edge</div><div><kbd>]</kbd> / <kbd>[</kbd> next / previous value match</div>
+    <div><kbd>R</kbd> cycle radix (bin, hex, dec, signed)</div><div><kbd>G</kbd> analog view for selected bus</div>
+    <div><kbd>&uarr;</kbd> <kbd>&darr;</kbd> select signal row</div><div><kbd>Alt</kbd>+<kbd>&uarr;</kbd>/<kbd>&darr;</kbd> move row</div>
+    <div><kbd>Del</kbd> remove selected signal</div><div><kbd>C</kbd> clear cursors</div>
+    <div><kbd>E</kbd> export PNG</div><div><kbd>Shift</kbd>+<kbd>E</kbd> export text summary</div>
+    <div><kbd>L</kbd> copy share link</div><div><kbd>?</kbd> this help</div>
+  </div>
+  <p class="note">Mouse: click = cursor A (snaps to edges of the clicked row), Shift+click = cursor B, drag = pan, Ctrl/Cmd + wheel = zoom at pointer, Shift + wheel = pan, wheel = scroll rows, drag in the ruler = zoom to range.</p>
+  <p class="note">Value search: type a value in the signal's current radix, or with a prefix: <code>0x1F</code>, <code>0b1010</code>, <code>'d42</code>, or <code>x</code> / <code>z</code> for any unknown / high-impedance bit.</p>
+  <div class="row"><span class="spacer"></span><button id="helpClose" class="primary">Close</button></div>
+</dialog>
+<script>
+'use strict';
+const DEMOS = {"counter":{"file":"counter.vcd","title":"Counter (8-bit up/down, x/z/runt demo)","defaults":["tb_counter.clk","tb_counter.rst_n","tb_counter.en","tb_counter.up","tb_counter.q","tb_counter.wrap","tb_counter.bus"],"z":"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"},"fsm":{"file":"fsm.vcd","title":"FSM (1011 sequence detector)","defaults":["tb_fsm.clk","tb_fsm.rst_n","tb_fsm.din","tb_fsm.state","tb_fsm.next_state","tb_fsm.detected"],"z":"jVjJjts4ED1HX0Ev6XQ2N3dSfU4OAQaYQwYzh8ag4baZjjHeIMlJf/5ooSjKKjYJGLRcRbLq8T0WKS+368pkb/4xW/TnpkJIISLuMbkXHFFMZbY0x222/GWKcnc6Zm++bdbFpUR/m2K3Pz1bb7U7mHKz3tfzkHNpjeXmdDbocNpe9gZVT48/ygOyk60L9HtXGMTQDJVVHR890Hv879Q9R0fzUj2+0oegBdqaymyqGsDgK8xz7Vqizf6/ifUt2u6OE+sNKsrq8douOXpXp1iY9QE9SDZOYHeszLMpEKPoFu3QAyODf4R+e6mmeV8nZ83X2VnzNL3X4J/XxfpQm+vc0Hv05etfAd8H9O3LH18Dzo/oOwm4PtUuHPB9bnzkah0ZWr1GZdflDhDD5dytJPSrbrbmx+64q2pplta4OR0O5lih7z9Pv1H103i5/VrvL6Zc2Y7by+G83u+zJ0LQ57rF6FPdoo/ZE0Yfmt8Yve+kvMBd7zrTMnt6QXdNl1XzdNv0I/Wnbpq2/bQW78l+W7Pt577QuwzfZPhthpfZy6KZed7MPLOhRT0+w6191jR3GVlmi2ZW3IxYkLZDY6PORgebap7qYbcZuckWrO1Sg5w3zappakcbesGE9c2apgvDbf9mfNOHu4mF9RDrEc4j3Zh52666pby1EBdS2JTmdhVJi4z00FQ/vp9a9QM8/HoCpM3RQtEAlBxIq8u+G5NH0mpXvEM8b9sOlxeVYBsW2xg2SDtNnwYhfR4OHyFiDIYsutGz7ssOpG5dejYIdeIYQSUMosAHS1gMbc+8pa41ATwQARDhiYoIgAoiQS48jZCYSIgC2Oj47COrFDa0Y2PAqZPoyIeRjsgc5oNicEv4gCmOAKaebvp4lACMUDphBBNfppQClFA2qMtNz4YywmFF+Qh4DIGANtCIMyoSOKOgerBfYmhMPhSUD/aVS1P0Q7XbJm5X0iT9ULAejTYpvS5JrbDGQBgG94HPN0spS6yXFxn4Z0l1iVFwM/vSYDQBCHMJOH0zBuibcW/L9mvOhoOJTSsSxiNmGVSTmPT2s5tWDtMqcA+PCGMqIjumwTNkTJdOoWuoPh5feQpfPFCMfMI4jhPG/YLUp8ChisThiuRh5lBJ4vApZsutHRg7xzj36pq7xUAnGRdQln514pBuuNONd1TyQTdcBSqnjyKmG64DpdNfwxTd8HzIdiAtSTcCB8qupxuRoBtBhpuFk66AdCMocLfAPmYB6UYwOFF/p4qYbgT3CntPq4B0I8AbkF9vBKQbIQP131/O2DEm4GNsdKaKlHNM6KH8D3CTDjKRe0Mdn4GbkMTwzc9HLWNXIUngM89HLUkCahk6uvxsaCwbBt9EfQVIlpIN907AngPJUziQAgbiS16K+N6UEn7HGRVrKVPAdMpsXmzbX1coxltIavfmKvXwHtkJi9gpcmATqamcLFoVE5GaisjiUynSUTQYOSYYxYKRU2SieDBy7AauRDByysVbyWDk6Du9CkZOKU9KByPrWOQ8GDlPiKyDCtMxhemgwnSKwvTwd46mKUVAs37A/w=="},"hop":{"file":"hop_engine.vcd","title":"Keyed hop engine (FHSS-Link SipHash PRF)","defaults":["tb_hop_demo.clk","tb_hop_demo.req","tb_hop_demo.busy","tb_hop_demo.valid","tb_hop_demo.chan","tb_hop_demo.dut.state","tb_hop_demo.dut.v0"],"z":"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"}};
+/* ---------- VCD parser: byte-level, chunk-resumable, typed-array storage ---------- */
+const UNIT_S = {s:1, ms:1e-3, us:1e-6, ns:1e-9, ps:1e-12, fs:1e-15};
+const UNITS = [['s',1],['ms',1e-3],['us',1e-6],['ns',1e-9],['ps',1e-12],['fs',1e-15]];
+
+function packBits(bits, L, w, sv, sm, sz, nw){
+  // bits: array-like of char codes, MSB first (length L). Verilog left-extension: x/z extend, 0/1 extend with 0.
+  for (let k = 0; k < nw; k++){ sv[k] = 0; sm[k] = 0; sz[k] = 0; }
+  const f = L ? (bits[0] | 32) : 48;
+  const ext = (L < w && (f === 120 || f === 122)) ? f : 48;
+  for (let j = 0; j < w; j++){
+    const ch = j < L ? (bits[L - 1 - j] | 32) : ext;
+    if (ch === 48) continue;
+    const k = j >>> 5, b = 1 << (j & 31);
+    if (ch === 49) sv[k] |= b;
+    else if (ch === 122) { sm[k] |= b; sz[k] |= b; }
+    else sm[k] |= b;                       // x, u, w, - ... all unknown
+  }
+}
+
+class VcdParser {
+  constructor(){
+    this.root = {name:'', type:'root', kids:[], sigs:[], parent:null, path:'', n:0};
+    this.cur = this.root; this.sigs = []; this.map = new Map(); this.datas = [];
+    this.cmd = null; this.args = []; this.vals = false; this.defsDone = false;
+    this.t = 0; this.tmin = Infinity; this.tmax = 0;
+    this.pk = 0; this.pb = null; this.pr = 0;      // pending vector kind (1 bin, 2 real, 3 string), payload
+    this.carry = null; this.bytes = 0;
+    this.meta = {date:'', version:'', comments:[], timescale:'1 ns'};
+    this.tsMag = 1; this.tsUnit = 'ns';
+    this.maxNw = 1; this.sv = new Uint32Array(1); this.sm = new Uint32Array(1); this.sz = new Uint32Array(1);
+  }
+  static key(b, s, e){
+    if (e - s > 8) { let r = ''; for (let i = s; i < e; i++) r += String.fromCharCode(b[i]); return r; }
+    let k = 0; for (let i = s; i < e; i++) k = k * 95 + (b[i] - 32); return k;
+  }
+  static str(b, s, e){ let r = ''; for (let i = s; i < e; i++) r += String.fromCharCode(b[i]); return r; }
+  feed(u8, last){
+    let b = u8;
+    if (this.carry){ const nb = new Uint8Array(this.carry.length + u8.length); nb.set(this.carry); nb.set(u8, this.carry.length); b = nb; this.carry = null; }
+    this.bytes += u8.length;
+    const n = b.length; let i = 0;
+    while (i < n){
+      if (b[i] <= 32){ i++; continue; }
+      const s = i++;
+      while (i < n && b[i] > 32) i++;
+      if (i >= n && !last){ this.carry = b.slice(s); break; }
+      this.tok(b, s, i);
+    }
+  }
+  tok(b, s, e){
+    const c = b[s];
+    if (this.cmd !== null && !this.vals){                // collecting arguments of a $command
+      if (c === 36 && e - s === 4 && b[s+1] === 101 && b[s+2] === 110 && b[s+3] === 100) this.endCmd();
+      else if (this.args.length < 400) this.args.push(VcdParser.str(b, s, e));
+      return;
+    }
+    if (c === 36){                                       // $
+      if (e - s === 4 && b[s+1] === 101 && b[s+2] === 110 && b[s+3] === 100){ this.cmd = null; this.vals = false; return; }
+      const name = VcdParser.str(b, s + 1, e);
+      this.cmd = name;
+      if (this.defsDone && (name === 'dumpvars' || name === 'dumpall' || name === 'dumpon' || name === 'dumpoff')) this.vals = true;
+      else { this.vals = false; this.args = []; }
+      return;
+    }
+    if (!this.defsDone) return;
+    if (this.pk){                                        // second token of "b101 id" / "r1.5 id"
+      const k = this.pk; this.pk = 0;
+      const d = this.map.get(VcdParser.key(b, s, e));
+      if (!d) return;
+      if (k === 1){ if (!d.real) { packBits(this.pb, this.pb.length, d.w, this.sv, this.sm, this.sz, d.nw); this.commit(d); } }
+      else if (k === 2){ if (d.real) this.commitReal(d, this.pr); }
+      return;
+    }
+    if (c === 35){                                       // #time
+      let t = 0; for (let i = s + 1; i < e; i++) t = t * 10 + (b[i] - 48);
+      this.t = t; if (t < this.tmin) this.tmin = t; if (t > this.tmax) this.tmax = t;
+      return;
+    }
+    const lc = c | 32;
+    if (lc === 98){ this.pk = 1; this.pb = b.subarray(s + 1, e); return; }            // b / B
+    if (lc === 114){ this.pk = 2; this.pr = parseFloat(VcdParser.str(b, s + 1, e)); return; }   // r / R
+    if (lc === 115){ this.pk = 3; return; }                                           // s / S (string values ignored)
+    // scalar: 0 1 x z u w l h -
+    const d = this.map.get(VcdParser.key(b, s + 1, e));
+    if (!d || d.real) return;
+    const sv = this.sv, sm = this.sm, sz = this.sz;
+    if (d.nw === 1 && d.w === 1){
+      sv[0] = 0; sm[0] = 0; sz[0] = 0;
+      if (lc === 49 || lc === 104) sv[0] = 1;
+      else if (lc === 122) { sm[0] = 1; sz[0] = 1; }
+      else if (lc !== 48 && lc !== 108) sm[0] = 1;
+      this.commit(d);
+    } else {
+      const ch = lc === 104 ? 49 : lc === 108 ? 48 : lc;
+      packBits([ch], 1, d.w, sv, sm, sz, d.nw); this.commit(d);
+    }
+  }
+  endCmd(){
+    const a = this.args;
+    switch (this.cmd){
+      case 'scope': {
+        const name = a[1] || a[0] || '?';
+        const node = {name, type: a[0] || 'module', kids:[], sigs:[], parent:this.cur, path:(this.cur.path ? this.cur.path + '.' : '') + name, n:0};
+        this.cur.kids.push(node); this.cur = node; break; }
+      case 'upscope': if (this.cur.parent) this.cur = this.cur.parent; break;
+      case 'timescale': {
+        const txt = a.join(' '); this.meta.timescale = txt;
+        const m = /(\d+)\s*(fs|ps|ns|us|ms|s)/.exec(txt); if (m){ this.tsMag = +m[1]; this.tsUnit = m[2]; }
+        break; }
+      case 'date': this.meta.date = a.join(' '); break;
+      case 'version': this.meta.version = a.join(' '); break;
+      case 'comment': if (this.meta.comments.length < 20) this.meta.comments.push(a.join(' ')); break;
+      case 'enddefinitions': this.defsDone = true; break;
+      case 'var': this.declVar(a); break;
+    }
+    this.cmd = null;
+  }
+  declVar(a){
+    if (a.length < 4) return;
+    const type = a[0], w = Math.max(1, parseInt(a[1], 10) || 1), id = a[2];
+    let name = a[3]; const idx = a.length > 4 ? a.slice(4).join('') : ''; let range = '';
+    if (idx){ if (w === 1 && /^\[\d+\]$/.test(idx)) name += idx; else range = idx; }
+    let key; { const tmp = new Uint8Array(id.length); for (let i = 0; i < id.length; i++) tmp[i] = id.charCodeAt(i); key = VcdParser.key(tmp, 0, tmp.length); }
+    let d = this.map.get(key);
+    if (!d){
+      const real = (type === 'real' || type === 'realtime' || type === 'shortreal');
+      const nw = real ? 2 : (w + 31) >>> 5;
+      d = {w: real ? 64 : w, nw, n:0, cap:16, t:new Float64Array(16), v:new Uint32Array(16 * nw), m:null, z:null,
+           real, rv: real ? new Float64Array(16) : null, same:0};
+      this.map.set(key, d); this.datas.push(d);
+      if (nw > this.maxNw){ this.maxNw = nw; this.sv = new Uint32Array(nw); this.sm = new Uint32Array(nw); this.sz = new Uint32Array(nw); }
+    }
+    const path = (this.cur.path ? this.cur.path + '.' : '') + name;
+    const sig = {name, range, path, lpath: path.toLowerCase(), width: d.w, type, id, data: d, scope: this.cur, idx: this.sigs.length};
+    this.cur.sigs.push(sig); this.sigs.push(sig);
+  }
+  grow(d){
+    const nc = d.cap * 2, nw = d.nw;
+    const t = new Float64Array(nc); t.set(d.t); d.t = t;
+    const v = new Uint32Array(nc * nw); v.set(d.v); d.v = v;
+    if (d.m){ const m = new Uint32Array(nc * nw); m.set(d.m); d.m = m; const z = new Uint32Array(nc * nw); z.set(d.z); d.z = z; }
+    if (d.rv){ const r = new Float64Array(nc); r.set(d.rv); d.rv = r; }
+    d.cap = nc;
+  }
+  commit(d){
+    const nw = d.nw, n = d.n, sv = this.sv, sm = this.sm, sz = this.sz;
+    if (n > 0){
+      const o = (n - 1) * nw; let same = true;
+      for (let k = 0; k < nw; k++) if (d.v[o + k] !== sv[k]){ same = false; break; }
+      if (same){
+        if (d.m){ for (let k = 0; k < nw; k++) if (d.m[o + k] !== sm[k] || d.z[o + k] !== sz[k]){ same = false; break; } }
+        else { for (let k = 0; k < nw; k++) if (sm[k]){ same = false; break; } }
+      }
+      if (same) return;
+    }
+    if (n === d.cap) this.grow(d);
+    const o = n * nw;
+    d.t[n] = this.t;
+    for (let k = 0; k < nw; k++) d.v[o + k] = sv[k];
+    let any = 0; for (let k = 0; k < nw; k++) any |= sm[k];
+    if (any && !d.m){ d.m = new Uint32Array(d.cap * nw); d.z = new Uint32Array(d.cap * nw); }
+    if (d.m) for (let k = 0; k < nw; k++){ d.m[o + k] = sm[k]; d.z[o + k] = sz[k]; }
+    if (n > 0 && d.t[n - 1] === this.t) d.same++;
+    d.n = n + 1;
+  }
+  commitReal(d, val){
+    const n = d.n;
+    if (n > 0 && d.rv[n - 1] === val) return;
+    if (n === d.cap) this.grow(d);
+    d.t[n] = this.t; d.rv[n] = val;
+    if (n > 0 && d.t[n - 1] === this.t) d.same++;
+    d.n = n + 1;
+  }
+  finish(){
+    if (this.carry) this.feed(new Uint8Array(0), true);
+    let total = 0;
+    for (const d of this.datas){
+      const n = d.n, nw = d.nw;
+      d.t = d.t.slice(0, n); d.v = d.v.slice(0, n * nw);
+      if (d.m){ d.m = d.m.slice(0, n * nw); d.z = d.z.slice(0, n * nw); }
+      if (d.rv) d.rv = d.rv.slice(0, n);
+      total += n;
+      if (n && d.t[n - 1] > this.tmax) this.tmax = d.t[n - 1];
+      if (n && d.t[0] < this.tmin) this.tmin = d.t[0];
+      d.cap = n;
+    }
+    const count = (nd) => { let c = nd.sigs.length; for (const k of nd.kids) c += count(k); nd.n = c; return c; };
+    count(this.root);
+    return {root: this.root, sigs: this.sigs, datas: this.datas, tmin: isFinite(this.tmin) ? this.tmin : 0, tmax: this.tmax,
+            tsMag: this.tsMag, tsUnit: this.tsUnit, meta: this.meta, nChanges: total, bytes: this.bytes};
+  }
+}
+
+/* ---------- data access, formatting ---------- */
+function ub(d, x){ let lo = 0, hi = d.n; const t = d.t; while (lo < hi){ const m = (lo + hi) >>> 1; if (t[m] <= x) lo = m + 1; else hi = m; } return lo; }
+function lb(d, x, lo){ lo = lo || 0; let hi = d.n; const t = d.t; while (lo < hi){ const m = (lo + hi) >>> 1; if (t[m] < x) lo = m + 1; else hi = m; } return lo; }
+function idxAt(d, t){ return ub(d, t) - 1; }
+
+function trimNum(v, sig){ if (v === 0) return '0'; const s = Math.abs(v) >= 1e21 ? v.toExponential(sig - 1) : String(parseFloat(v.toPrecision(sig))); return s; }
+function fmtT(t, sig){
+  if (t == null || !isFinite(t)) return '-';
+  const sec = t * D.tsMag * UNIT_S[D.tsUnit], a = Math.abs(sec);
+  if (a === 0) return '0 ' + D.tsUnit;
+  let u = UNITS[UNITS.length - 1];
+  for (const x of UNITS) if (a >= x[1] * 0.9999999){ u = x; break; }
+  return trimNum(sec / u[1], sig || 6) + ' ' + u[0];
+}
+function fmtFreq(hz){
+  if (!isFinite(hz) || hz <= 0) return '-';
+  const U = [['THz',1e12],['GHz',1e9],['MHz',1e6],['kHz',1e3],['Hz',1]];
+  for (const [n, f] of U) if (hz >= f * 0.9999999) return trimNum(hz / f, 5) + ' ' + n;
+  return trimNum(hz, 4) + ' Hz';
+}
+function secPerUnit(){ return D.tsMag * UNIT_S[D.tsUnit]; }
+
+function xzOf(d, idx){            // 0 clean, 1 has x, 2 z only
+  if (!d.m || idx < 0) return 0;
+  const o = idx * d.nw; let hx = false, hz = false;
+  for (let k = 0; k < d.nw; k++){ const m = d.m[o + k], z = d.z[o + k]; if (m & ~z) hx = true; if (z) hz = true; }
+  return hx ? 1 : hz ? 2 : 0;
+}
+function fmtReal(v){ return Number.isInteger(v) ? String(v) : v.toPrecision(6).replace(/\.?0+$/, '').replace(/\.?0+e/, 'e'); }
+
+function fmtValue(d, idx, radix, w){
+  if (idx < 0) return '-';
+  if (d.real) return fmtReal(d.rv[idx]);
+  const nw = d.nw, o = idx * nw, v = d.v, m = d.m, z = d.z;
+  const bit = (arr, j) => (arr[o + (j >>> 5)] >>> (j & 31)) & 1;
+  if (w === 1){ if (m && m[o]) return z[o] ? 'z' : 'x'; return String(v[o] & 1); }
+  if (radix === 'b'){
+    let s = '';
+    for (let j = w - 1; j >= 0; j--) s += (m && bit(m, j)) ? (bit(z, j) ? 'z' : 'x') : bit(v, j);
+    return s;
+  }
+  if (radix === 'h'){
+    let s = '';
+    for (let ni = ((w + 3) >> 2) - 1; ni >= 0; ni--){
+      let nv = 0, xa = 0, za = 0, nb = 0;
+      for (let j = ni * 4; j < ni * 4 + 4 && j < w; j++){
+        nb++;
+        if (m && bit(m, j)){ if (bit(z, j)) za++; else xa++; } else nv |= bit(v, j) << (j & 3);
+      }
+      if (xa + za === 0) s += nv.toString(16);
+      else if (xa === nb) s += 'x'; else if (za === nb) s += 'z'; else s += xa ? 'X' : 'Z';
+    }
+    return s;
+  }
+  // decimal / signed
+  if (m){ let any = false, all = true; for (let j = 0; j < w; j++){ if (bit(m, j)) any = true; else all = false; }
+    if (any) return all ? 'x' : 'X'; }
+  const signed = radix === 's';
+  if (nw === 1){
+    let u = v[o];
+    if (signed){ if (w === 32) u = u | 0; else if ((u >>> (w - 1)) & 1) u = u - Math.pow(2, w); }
+    return String(u);
+  }
+  let big = 0n; for (let k = nw - 1; k >= 0; k--) big = (big << 32n) | BigInt(v[o + k]);
+  if (signed && bit(v, w - 1)) big -= (1n << BigInt(w));
+  return big.toString();
+}
+function numAt(d, idx, signed, w){
+  if (d.real) return d.rv[idx];
+  if (xzOf(d, idx)) return NaN;
+  const o = idx * d.nw;
+  if (d.nw === 1){
+    let u = d.v[o];
+    if (signed){ if (w === 32) u = u | 0; else if ((u >>> (w - 1)) & 1) u -= Math.pow(2, w); }
+    return u;
+  }
+  let u = d.v[o] + d.v[o + 1] * 4294967296;
+  for (let k = 2; k < d.nw; k++) u += d.v[o + k] * Math.pow(2, 32 * k);
+  if (signed && ((d.v[o + ((w - 1) >>> 5)] >>> ((w - 1) & 31)) & 1)) u -= Math.pow(2, w);
+  return u;
+}
+function ensureXC(d){
+  if (d.xcx || !d.m){ return; }
+  const n = d.n, nw = d.nw; d.xcx = new Uint32Array(n + 1); d.xcz = new Uint32Array(n + 1);
+  for (let i = 0; i < n; i++){
+    let x = 0, zz = 0;
+    for (let k = 0; k < nw; k++){ const mk = d.m[i * nw + k], zk = d.z[i * nw + k]; if (mk & ~zk) x = 1; if (zk) zz = 1; }
+    d.xcx[i + 1] = d.xcx[i] + x; d.xcz[i + 1] = d.xcz[i] + zz;
+  }
+}
+function numRange(d, signed, w){
+  const key = signed ? 's' : 'u';
+  if (d.rng && d.rng[key]) return d.rng[key];
+  let mn = Infinity, mx = -Infinity;
+  for (let i = 0; i < d.n; i++){ const v = numAt(d, i, signed, w); if (v === v){ if (v < mn) mn = v; if (v > mx) mx = v; } }
+  if (!isFinite(mn)){ mn = 0; mx = 1; }
+  d.rng = d.rng || {}; return d.rng[key] = [mn, mx];
+}
+
+/* ---------- global state ---------- */
+const D = {tsMag:1, tsUnit:'ns', tmin:0, tmax:1, sigs:[], root:null, meta:{}, nChanges:0, name:'', demo:'', pathMap:new Map()};
+const S = {rows:[], sel:-1, A:null, B:null, hover:null, hoverRow:-1, drag:null, theme:'light', tab:'measure', pnl:{}};
+const V = {t0:0, t1:1};
+let CL = {};
+const $ = (s) => document.querySelector(s);
+const el = {};
+const RADIX_NEXT = {h:'b', b:'d', d:'s', s:'h'};
+const RADIX_LBL = {b:'bin', h:'hex', d:'dec', s:'sdec'};
+const H_DIG = 30, H_AN = 70;
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function toast(msg){ el.toast.textContent = msg; el.toast.classList.add('on'); clearTimeout(toast._t); toast._t = setTimeout(() => el.toast.classList.remove('on'), 2200); }
+
+/* ---------- rows ---------- */
+function newRow(sig){
+  return {sig, radix: sig.width === 1 ? 'b' : 'h', analog: !!sig.data.real, y:0, h:0};
+}
+function layoutRows(){
+  let y = 0;
+  for (const r of S.rows){ r.h = (r.analog && r.sig.width > 1 || r.sig.data.real) ? H_AN : H_DIG; r.y = y; y += r.h; }
+  S.totalH = y;
+}
+function addSignal(sig, opts){
+  if (S.rows.some(r => r.sig === sig)) return null;
+  const r = newRow(sig); if (opts) Object.assign(r, opts);
+  S.rows.push(r); return r;
+}
+function afterRowsChange(){
+  layoutRows(); renderNames(); markTree(); resizeCanvas(); requestDraw(); updateValues(); updateHash(); renderPanel();
+}
+function removeRowAt(i){ S.rows.splice(i, 1); if (S.sel >= S.rows.length) S.sel = S.rows.length - 1; afterRowsChange(); }
+function moveRow(i, to){
+  to = Math.max(0, Math.min(S.rows.length - 1, to)); if (i === to || i < 0) return;
+  const [r] = S.rows.splice(i, 1); S.rows.splice(to, 0, r);
+  if (S.sel === i) S.sel = to; afterRowsChange();
+}
+function selRow(){ return S.sel >= 0 ? S.rows[S.sel] : null; }
+function selectRow(i){ S.sel = i; for (const e of el.names.children) e.classList.toggle('sel', +e.dataset.i === i); requestDraw(); renderPanel(); }
+
+function renderNames(){
+  el.names.textContent = '';
+  S.rows.forEach((r, i) => {
+    const e = document.createElement('div');
+    e.className = 'nrow' + (i === S.sel ? ' sel' : ''); e.dataset.i = i; e.style.height = r.h + 'px'; e.draggable = true;
+    const rng = r.sig.range || (r.sig.width > 1 ? '[' + (r.sig.width - 1) + ':0]' : '');
+    e.innerHTML = '<span class="grip" title="drag to reorder">&#8942;&#8942;</span><span class="nm" title="' + esc(r.sig.path) + '">' + esc(r.sig.name) + '<small>' + esc(rng) + '</small></span>' +
+      '<span class="val"></span><span class="valb"></span>' +
+      (r.sig.width > 1 && !r.sig.data.real ? '<button class="rdx" title="radix (R)">' + RADIX_LBL[r.radix] + '</button><button class="an' + (r.analog ? ' on' : '') + '" title="analog view (G)">~</button>' : '<span style="width:22px"></span><span style="width:22px"></span>') +
+      '<button class="rm" title="remove (Del)">&times;</button>';
+    e.addEventListener('click', ev => {
+      const t = ev.target;
+      if (t.classList.contains('rm')) return removeRowAt(i);
+      if (t.classList.contains('rdx')) { cycleRadix(i); return; }
+      if (t.classList.contains('an')) { toggleAnalog(i); return; }
+      selectRow(i);
+    });
+    e.addEventListener('dragstart', ev => { ev.dataTransfer.setData('text/plain', String(i)); ev.dataTransfer.effectAllowed = 'move'; S.dragRow = i; });
+    e.addEventListener('dragover', ev => { ev.preventDefault(); e.classList.add('dragover'); });
+    e.addEventListener('dragleave', () => e.classList.remove('dragover'));
+    e.addEventListener('drop', ev => { ev.preventDefault(); ev.stopPropagation(); e.classList.remove('dragover'); const from = S.dragRow; S.dragRow = -1; if (from >= 0 && from !== i) moveRow(from, i); });
+    el.names.appendChild(e);
+  });
+  el.names.style.height = Math.max(S.totalH || 0, 0) + 'px';
+  el.empty.style.display = S.rows.length ? 'none' : 'flex';
+}
+function cycleRadix(i){ const r = S.rows[i]; r.radix = RADIX_NEXT[r.radix]; const b = el.names.children[i].querySelector('.rdx'); if (b) b.textContent = RADIX_LBL[r.radix]; updateValues(); requestDraw(); updateHash(); }
+function toggleAnalog(i){ const r = S.rows[i]; if (r.sig.width < 2 && !r.sig.data.real) return; r.analog = !r.analog; afterRowsChange(); }
+
+function updateValues(){
+  const kids = el.names.children;
+  S.rows.forEach((r, i) => {
+    const e = kids[i]; if (!e) return;
+    const va = e.querySelector('.val'), vb = e.querySelector('.valb'), d = r.sig.data;
+    const set = (node, t) => {
+      if (t == null){ node.textContent = ''; node.title = ''; node.className = node.classList.contains('val') ? 'val' : 'valb'; return; }
+      const ix = idxAt(d, t), s = fmtValue(d, ix, r.radix, r.sig.width), x = xzOf(d, ix);
+      node.textContent = s; node.title = s;
+      node.className = (node.classList.contains('val') ? 'val' : 'valb') + (x === 1 ? ' x' : x === 2 ? ' z' : '');
+    };
+    set(va, S.A); set(vb, S.B);
+  });
+  el.cA.textContent = S.A == null ? '-' : fmtT(S.A);
+  el.cB.textContent = S.B == null ? '-' : fmtT(S.B);
+  if (S.A != null && S.B != null){
+    const dt = Math.abs(S.B - S.A); el.cD.textContent = fmtT(dt);
+    el.cF.textContent = dt > 0 ? '(1/Δ = ' + fmtFreq(1 / (dt * secPerUnit())) + ')' : '';
+  } else { el.cD.textContent = '-'; el.cF.textContent = ''; }
+}
+
+/* ---------- view / viewport ---------- */
+let dpr = 1, W = 600, Hh = 300, needDraw = false, anim = null;
+function clampView(a, b){
+  let span = b - a; const full = Math.max(1, D.tmax - D.tmin);
+  span = Math.max(4, Math.min(span, full * 50 + 10));
+  const mid = (a + b) / 2; a = mid - span / 2; b = mid + span / 2;
+  if (a < D.tmin - span * 0.9){ a = D.tmin - span * 0.9; b = a + span; }
+  if (b > D.tmax + span * 0.9){ b = D.tmax + span * 0.9; a = b - span; }
+  return [a, b];
+}
+function setView(a, b, animate){
+  [a, b] = clampView(a, b);
+  if (anim) { cancelAnimationFrame(anim.raf); anim = null; }
+  if (!animate || window.__noAnim){ V.t0 = a; V.t1 = b; requestDraw(); return; }
+  const s0 = V.t0, s1 = V.t1, c0 = (s0 + s1) / 2, c1 = (a + b) / 2, l0 = Math.log(s1 - s0), l1 = Math.log(b - a), t0 = performance.now(), dur = 160;
+  const step = (now) => {
+    const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    const c = c0 + (c1 - c0) * e, sp = Math.exp(l0 + (l1 - l0) * e);
+    V.t0 = c - sp / 2; V.t1 = c + sp / 2; drawNow();
+    if (k < 1) anim.raf = requestAnimationFrame(step); else { anim = null; V.t0 = a; V.t1 = b; requestDraw(); }
+  };
+  anim = {raf: requestAnimationFrame(step)};
+}
+function fitView(animate){ const span = Math.max(1, D.tmax - D.tmin); setView(D.tmin - span * 0.01, D.tmax + span * 0.01, animate); }
+function zoomBy(f, focus, animate){
+  const c = focus != null ? focus : (S.A != null && S.A >= V.t0 && S.A <= V.t1 ? S.A : (V.t0 + V.t1) / 2);
+  setView(c - (c - V.t0) * f, c + (V.t1 - c) * f, animate);
+}
+function panBy(frac, animate){ const sp = V.t1 - V.t0; setView(V.t0 + sp * frac, V.t1 + sp * frac, animate); }
+function centerOn(t, animate){
+  if (t >= V.t0 && t <= V.t1) return;
+  const sp = V.t1 - V.t0; setView(t - sp / 2, t + sp / 2, animate);
+}
+function requestDraw(){ if (needDraw) return; needDraw = true; requestAnimationFrame(() => { needDraw = false; drawNow(); }); }
+function resizeCanvas(){
+  dpr = Math.max(1, window.devicePixelRatio || 1);
+  const rows = el.rows;
+  Hh = Math.max(40, rows.clientHeight); el.cwrap.style.height = Hh + 'px';
+  W = Math.max(50, el.cwrap.clientWidth);
+  el.cv.width = Math.round(W * dpr); el.cv.height = Math.round(Hh * dpr);
+  el.hdr.style.paddingRight = (rows.offsetWidth - rows.clientWidth) + 'px';
+  const rwid = el.ruler.clientWidth; el.ruler.width = Math.round(rwid * dpr); el.ruler.height = Math.round(44 * dpr);
+  requestDraw();
+}
+
+/* ---------- colours / theme ---------- */
+function loadColors(){
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  CL = {bg:g('--panel'), ink:g('--ink'), muted:g('--muted'), line:g('--line'), w1:g('--w1'), bus:g('--wbus'), x:g('--wx'), z:g('--wz'), an:g('--wan'),
+        A:g('--curA'), B:g('--curB'), grid:g('--grid'), gridmaj:g('--gridmaj'), alt:g('--rowalt'), sel:g('--sel'), panel2:g('--panel2')};
+}
+function setTheme(t){
+  S.theme = t; document.documentElement.dataset.theme = t; loadColors(); requestDraw();
+  try { localStorage.setItem('vcdstudio.theme', t); } catch (e) {}
+}
+
+/* ---------- ruler / ticks ---------- */
+function niceStep(raw){ const p = Math.pow(10, Math.floor(Math.log10(raw))); for (const m of [1, 2, 5, 10]) if (m * p >= raw) return m * p; return 10 * p; }
+function tickInfo(t0, ppt){
+  const step = niceStep(110 / ppt), sps = secPerUnit();
+  const stepSec = step * sps; let u = UNITS[UNITS.length - 1];
+  for (const x of UNITS) if (stepSec >= x[1] * 0.9999999){ u = x; break; }
+  const dec = Math.max(0, Math.min(9, -Math.floor(Math.log10(stepSec / u[1]) + 1e-9)));
+  return {step, unit:u, dec};
+}
+function tickLabel(t, ti){ const v = t * secPerUnit() / ti.unit[1]; return (Math.abs(v) < 1e-12 ? '0' : v.toFixed(ti.dec)) + ' ' + ti.unit[0]; }
+
+function drawRulerOn(ctx, Wp, hgt, ppt, t0, showCur){
+  ctx.fillStyle = CL.bg; ctx.fillRect(0, 0, Wp, hgt);
+  ctx.font = '11px ui-monospace,Menlo,Consolas,monospace'; ctx.textBaseline = 'middle';
+  const ti = tickInfo(t0, ppt), step = ti.step, minor = step / 5;
+  const t1 = t0 + Wp / ppt;
+  ctx.strokeStyle = CL.muted; ctx.fillStyle = CL.muted; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let t = Math.ceil(t0 / minor) * minor, c = 0; t <= t1 && c < 4000; t += minor, c++){ const x = Math.round((t - t0) * ppt) + .5; ctx.moveTo(x, hgt - 5); ctx.lineTo(x, hgt - 1); }
+  ctx.stroke(); ctx.beginPath();
+  const labs = [];
+  for (let t = Math.ceil(t0 / step) * step, c = 0; t <= t1 && c < 1000; t += step, c++){ const x = Math.round((t - t0) * ppt) + .5; ctx.moveTo(x, hgt - 12); ctx.lineTo(x, hgt - 1); labs.push([x, t]); }
+  ctx.stroke();
+  ctx.textAlign = 'left';
+  for (const [x, t] of labs) ctx.fillText(tickLabel(t, ti), x + 3, hgt - 20);
+  if (showCur){
+    const flag = (t, name, col) => {
+      const x = (t - t0) * ppt; if (x < -40 || x > Wp + 40) return;
+      ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x, hgt); ctx.lineTo(x - 5, hgt - 10); ctx.lineTo(x + 5, hgt - 10); ctx.closePath(); ctx.fill();
+      ctx.font = 'bold 11px ui-monospace,Menlo,Consolas,monospace'; ctx.textAlign = 'left'; ctx.fillText(name, x + 6, 8);
+    };
+    if (S.A != null) flag(S.A, 'A ' + fmtT(S.A), CL.A);
+    if (S.B != null) flag(S.B, 'B ' + fmtT(S.B), CL.B);
+    if (S.A != null && S.B != null){
+      const xa = (S.A - t0) * ppt, xb = (S.B - t0) * ppt, lo = Math.min(xa, xb), hi = Math.max(xa, xb);
+      ctx.fillStyle = CL.ink; ctx.font = '11px ui-monospace,Menlo,Consolas,monospace'; ctx.textAlign = 'center';
+      const txt = 'Δ ' + fmtT(Math.abs(S.B - S.A)); const cx = Math.max(Math.min((lo + hi) / 2, Wp - 50), 50);
+      ctx.fillText(txt, cx, 22);
+      ctx.strokeStyle = CL.ink; ctx.beginPath(); ctx.moveTo(lo, 28); ctx.lineTo(hi, 28); ctx.stroke();
+    }
+  }
+}
+
+/* ---------- waveform drawing ---------- */
+const RUN = {xs:[], xe:[], i:[], j:[], dn:[]};
+function buildRuns(d, t0, ppt, Wp, tEnd){
+  RUN.xs.length = RUN.xe.length = RUN.i.length = RUN.j.length = RUN.dn.length = 0;
+  const n = d.n; if (!n) return 0;
+  const t = d.t, t1 = t0 + Wp / ppt, inv = 1 / ppt;
+  let cur = ub(d, t0) - 1, k, xcur = 0;
+  if (cur < 0){ if (t[0] >= t1) return 0; cur = 0; k = 1; xcur = (t[0] - t0) * ppt; } else k = cur + 1;
+  const push = (xs, xe, i, j, dn) => { RUN.xs.push(xs); RUN.xe.push(xe); RUN.i.push(i); RUN.j.push(j); RUN.dn.push(dn); };
+  while (k < n){
+    const tk = t[k]; if (tk >= t1) break;
+    const xk = (tk - t0) * ppt, c = Math.floor(xk);
+    const j = lb(d, t0 + (c + 1) * inv, k + 1);
+    if (j === k + 1){ push(xcur, xk, cur, cur, 0); cur = k; xcur = xk; k = j; }
+    else { if (c > xcur) push(xcur, c, cur, cur, 0); push(c, c + 1, cur, j - 1, 1); cur = j - 1; xcur = c + 1; k = j; }
+  }
+  const xend = (Math.min(tEnd, t1) - t0) * ppt;
+  if (xend > xcur) push(xcur, xend, cur, cur, 0);
+  return RUN.xs.length;
+}
+let CW = 6.6;
+function drawBit(ctx, r, y, Wp, t0, ppt){
+  const d = r.sig.data, nr = buildRuns(d, t0, ppt, Wp, D.tmax);
+  const top = y + 6, bot = y + r.h - 6, mid = (top + bot) / 2;
+  ensureXC(d);
+  ctx.lineWidth = 1.5; ctx.strokeStyle = CL.w1; ctx.beginPath();
+  let first = true; const xz = [];
+  for (let q = 0; q < nr; q++){
+    const xs = RUN.xs[q], xe = RUN.xe[q], i = RUN.i[q];
+    if (RUN.dn[q]){
+      const j = RUN.j[q], xp = Math.round(xs) + .5;
+      ctx.moveTo(xp, top); ctx.lineTo(xp, bot); first = true;
+      if (d.xcx && d.xcx[j + 1] - d.xcx[i] > 0) xz.push([xs, xe, 1]); else if (d.xcz && d.xcz[j + 1] - d.xcz[i] > 0) xz.push([xs, xe, 2]);
+      continue;
+    }
+    const s = xzOf(d, i); let yl;
+    if (s){ yl = mid; xz.push([xs, xe, s]); } else yl = (d.v[i] & 1) ? top : bot;
+    if (first){ ctx.moveTo(xs, yl); first = false; } else ctx.lineTo(xs, yl);
+    ctx.lineTo(xe, yl);
+  }
+  ctx.stroke();
+  for (const [xs, xe, s] of xz){
+    if (s === 1){ ctx.fillStyle = CL.x; ctx.globalAlpha = .28; ctx.fillRect(xs, top, Math.max(1, xe - xs), bot - top); ctx.globalAlpha = 1; ctx.strokeStyle = CL.x; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(xs, mid); ctx.lineTo(xe, mid); ctx.stroke(); }
+    else { ctx.strokeStyle = CL.z; ctx.lineWidth = 2; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(xs, mid); ctx.lineTo(xe, mid); ctx.stroke(); ctx.setLineDash([]); }
+  }
+}
+function drawBus(ctx, r, y, Wp, t0, ppt){
+  const d = r.sig.data, nr = buildRuns(d, t0, ppt, Wp, D.tmax), w = r.sig.width;
+  const top = y + 5, bot = y + r.h - 5, mid = (top + bot) / 2;
+  ensureXC(d);
+  ctx.lineWidth = 1.2; ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.font = '11px ui-monospace,Menlo,Consolas,monospace';
+  for (let q = 0; q < nr; q++){
+    const xs = RUN.xs[q], xe = RUN.xe[q], i = RUN.i[q], wd = xe - xs;
+    if (RUN.dn[q]){
+      const j = RUN.j[q]; let col = CL.bus;
+      if (d.xcx && d.xcx[j + 1] - d.xcx[i] > 0) col = CL.x; else if (d.xcz && d.xcz[j + 1] - d.xcz[i] > 0) col = CL.z;
+      ctx.fillStyle = col; ctx.globalAlpha = .75; ctx.fillRect(xs, top, Math.max(1, wd), bot - top); ctx.globalAlpha = 1; continue;
+    }
+    if (wd < 0.5) continue;
+    const s = xzOf(d, i), col = s === 1 ? CL.x : s === 2 ? CL.z : CL.bus, sl = Math.min(3, wd / 2);
+    ctx.beginPath(); ctx.moveTo(xs + sl, top); ctx.lineTo(xe - sl, top); ctx.lineTo(xe, mid); ctx.lineTo(xe - sl, bot); ctx.lineTo(xs + sl, bot); ctx.lineTo(xs, mid); ctx.closePath();
+    if (s){ ctx.globalAlpha = s === 1 ? .22 : .16; ctx.fillStyle = col; ctx.fill(); ctx.globalAlpha = 1; }
+    ctx.strokeStyle = col; ctx.stroke();
+    if (wd > 22){
+      let txt = fmtValue(d, i, r.radix, w); const maxc = Math.floor((wd - 8) / CW);
+      if (txt.length > maxc){ txt = maxc >= 3 ? txt.slice(0, maxc - 1) + '…' : ''; }
+      if (txt){ ctx.fillStyle = s ? col : CL.ink; ctx.fillText(txt, (Math.max(xs, 0) + Math.min(xe, Wp)) / 2, mid + .5); }
+    }
+  }
+}
+function drawAnalog(ctx, r, y, Wp, t0, ppt){
+  const d = r.sig.data, w = r.sig.width, signed = r.radix === 's';
+  const nr = buildRuns(d, t0, ppt, Wp, D.tmax);
+  const [mn, mx] = numRange(d, signed, w);
+  const top = y + 8, bot = y + r.h - 6, span = mx - mn || 1;
+  const Y = v => mx === mn ? (top + bot) / 2 : bot - (v - mn) / span * (bot - top);
+  ctx.lineWidth = 1.5; ctx.strokeStyle = CL.an; ctx.beginPath(); let first = true; const bad = [];
+  for (let q = 0; q < nr; q++){
+    const xs = RUN.xs[q], xe = RUN.xe[q], i = RUN.i[q];
+    if (RUN.dn[q]){
+      const j = RUN.j[q], stride = Math.max(1, Math.floor((j - i + 1) / 48)); let lo = Infinity, hi = -Infinity;
+      for (let k = i; k <= j; k += stride){ const v = numAt(d, k, signed, w); if (v === v){ if (v < lo) lo = v; if (v > hi) hi = v; } }
+      const v2 = numAt(d, j, signed, w); if (v2 === v2){ if (v2 < lo) lo = v2; if (v2 > hi) hi = v2; }
+      if (isFinite(lo)){ const xp = Math.round(xs) + .5; ctx.moveTo(xp, Y(lo)); ctx.lineTo(xp, Y(hi)); }
+      first = true; continue;
+    }
+    const v = numAt(d, i, signed, w);
+    if (v !== v){ bad.push([xs, xe]); first = true; continue; }
+    const yl = Y(v);
+    if (first){ ctx.moveTo(xs, yl); first = false; } else ctx.lineTo(xs, yl);
+    ctx.lineTo(xe, yl);
+  }
+  ctx.stroke();
+  for (const [xs, xe] of bad){ ctx.fillStyle = CL.x; ctx.globalAlpha = .25; ctx.fillRect(xs, top, Math.max(1, xe - xs), bot - top); ctx.globalAlpha = 1; }
+  ctx.fillStyle = CL.muted; ctx.font = '10px ui-monospace,Menlo,Consolas,monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.fillText(r.sig.data.real ? fmtReal(mx) : fmtValue2(mx, r, w), 3, y + 1);
+  ctx.textBaseline = 'bottom'; ctx.fillText(r.sig.data.real ? fmtReal(mn) : fmtValue2(mn, r, w), 3, y + r.h - 1);
+}
+function fmtValue2(v, r, w){ return r.radix === 'h' ? '0x' + Math.round(v).toString(16) : String(Math.round(v)); }
+
+function paintWaves(ctx, Wp, Hp, scrollTop, t0, ppt, o){
+  o = o || {};
+  ctx.fillStyle = CL.bg; ctx.fillRect(0, 0, Wp, Hp);
+  CW = ctx.measureText ? (ctx.font = '11px ui-monospace,Menlo,Consolas,monospace', ctx.measureText('0000000000').width / 10) : 6.6;
+  // grid
+  const ti = tickInfo(t0, ppt), t1 = t0 + Wp / ppt;
+  ctx.lineWidth = 1; ctx.strokeStyle = CL.grid; ctx.beginPath();
+  for (let t = Math.ceil(t0 / ti.step) * ti.step, c = 0; t <= t1 && c < 1000; t += ti.step, c++){ const x = Math.round((t - t0) * ppt) + .5; ctx.moveTo(x, 0); ctx.lineTo(x, Hp); }
+  ctx.stroke();
+  // rows
+  S.rows.forEach((r, i) => {
+    const y = r.y - scrollTop; if (y + r.h < 0 || y > Hp) return;
+    if (i === S.sel && !o.noSel){ ctx.fillStyle = CL.sel; ctx.fillRect(0, y, Wp, r.h); }
+    else if (i & 1){ ctx.fillStyle = CL.alt; ctx.fillRect(0, y, Wp, r.h); }
+    ctx.strokeStyle = CL.line; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, y + r.h - .5); ctx.lineTo(Wp, y + r.h - .5); ctx.stroke();
+    ctx.save(); ctx.beginPath(); ctx.rect(0, y, Wp, r.h); ctx.clip();
+    if (r.sig.data.real || (r.analog && r.sig.width > 1)) drawAnalog(ctx, r, y, Wp, t0, ppt);
+    else if (r.sig.width === 1) drawBit(ctx, r, y, Wp, t0, ppt);
+    else drawBus(ctx, r, y, Wp, t0, ppt);
+    ctx.restore();
+  });
+  // end-of-dump marker
+  const xe = (D.tmax - t0) * ppt;
+  if (xe >= 0 && xe <= Wp){ ctx.strokeStyle = CL.muted; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(Math.round(xe) + .5, 0); ctx.lineTo(Math.round(xe) + .5, Hp); ctx.stroke(); ctx.setLineDash([]); }
+  // cursors
+  const cur = (t, col, dash) => {
+    if (t == null) return; const x = Math.round((t - t0) * ppt) + .5; if (x < -2 || x > Wp + 2) return;
+    ctx.strokeStyle = col; ctx.lineWidth = 1.3; if (dash) ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, Hp); ctx.stroke(); ctx.setLineDash([]);
+  };
+  if (o.hover != null && !o.noHover) cur(o.hover, CL.muted, true);
+  cur(S.A, CL.A); cur(S.B, CL.B);
+  if (S.drag && S.drag.zoom && !o.noHover){
+    const xa = (S.drag.a - t0) * ppt, xb = (S.drag.b - t0) * ppt; ctx.fillStyle = CL.sel; ctx.fillRect(Math.min(xa, xb), 0, Math.abs(xb - xa), Hp);
+  }
+}
+function drawNow(){
+  if (!D.root) return;
+  const ppt = W / (V.t1 - V.t0), ctx = el.cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  paintWaves(ctx, W, Hh, el.rows.scrollTop, V.t0, ppt, {hover: S.hover});
+  const rc = el.ruler.getContext('2d'); rc.setTransform(dpr, 0, 0, dpr, 0, 0);
+  drawRulerOn(rc, el.ruler.clientWidth, 44, ppt, V.t0, true);
+  if (S.drag && S.drag.zoom){ const xa = (S.drag.a - V.t0) * ppt, xb = (S.drag.b - V.t0) * ppt; rc.fillStyle = CL.sel; rc.fillRect(Math.min(xa, xb), 0, Math.abs(xb - xa), 44); }
+  el.sView.textContent = 'view ' + fmtT(V.t0, 5) + ' .. ' + fmtT(V.t1, 5) + '  (' + fmtT(V.t1 - V.t0, 4) + ')';
+}
+
+/* ---------- search (edges / values) ---------- */
+function edgeKindAt(d, k){          // returns 1 rising, -1 falling, 0 none (1-bit only; strict 0->1 / 1->0)
+  if (k < 1) return 0;
+  const cm = d.m ? d.m[k] : 0, pm = d.m ? d.m[k - 1] : 0; if (cm || pm) return 0;
+  const c = d.v[k] & 1, p = d.v[k - 1] & 1;
+  return c === 1 && p === 0 ? 1 : c === 0 && p === 1 ? -1 : 0;
+}
+function findEdge(row, from, dir, kind){
+  const d = row.sig.data, n = d.n, one = row.sig.width === 1 && !d.real;
+  const ok = (k) => { if (k < 1) return false; if (!one || kind === 'any') return true; const e = edgeKindAt(d, k); return kind === 'rise' ? e === 1 : e === -1; };
+  if (dir > 0){ for (let k = ub(d, from); k < n; k++) if (ok(k)) return d.t[k]; }
+  else { for (let k = lb(d, from) - 1; k >= 1; k--) if (ok(k)) return d.t[k]; }
+  return null;
+}
+function parseMatch(str, row){
+  const w = row.sig.width, nw = row.sig.data.nw; let s = str.trim().toLowerCase().replace(/_/g, '');
+  if (!s) return null;
+  if (s === 'x') return {kind:'x'}; if (s === 'z') return {kind:'z'};
+  let radix = row.radix === 's' ? 'd' : row.radix, body = s, m;
+  if ((m = /^(?:\d+)?'([bhd])(.+)$/.exec(s))){ radix = m[1]; body = m[2]; }
+  else if (/^0x/.test(s)){ radix = 'h'; body = s.slice(2); }
+  else if (/^0b/.test(s)){ radix = 'b'; body = s.slice(2); }
+  let bits;
+  if (radix === 'b'){ if (!/^[01xz]+$/.test(body)) return {err:'not a binary value'}; bits = body; }
+  else if (radix === 'h'){ if (!/^[0-9a-fxz]+$/.test(body)) return {err:'not a hex value'}; bits = ''; for (const ch of body) bits += ch === 'x' ? 'xxxx' : ch === 'z' ? 'zzzz' : parseInt(ch, 16).toString(2).padStart(4, '0'); }
+  else { if (!/^-?\d+$/.test(body)) return {err:'not a decimal value'}; let big = BigInt(body); const mod = 1n << BigInt(w); big = ((big % mod) + mod) % mod; bits = big.toString(2); }
+  const sv = new Uint32Array(nw), sm = new Uint32Array(nw), sz = new Uint32Array(nw);
+  const arr = []; for (const ch of bits) arr.push(ch.charCodeAt(0));
+  packBits(arr, arr.length, w, sv, sm, sz, nw);
+  return {kind:'val', sv, sm, sz};
+}
+function matchAt(d, k, T){
+  const nw = d.nw, o = k * nw;
+  if (T.kind === 'x'){ return !!d.m && xzOf(d, k) === 1; }
+  if (T.kind === 'z'){ if (!d.m) return false; for (let q = 0; q < nw; q++) if (d.z[o + q]) return true; return false; }
+  for (let q = 0; q < nw; q++){
+    if (d.v[o + q] !== T.sv[q]) return false;
+    if ((d.m ? d.m[o + q] : 0) !== T.sm[q] || (d.z ? d.z[o + q] : 0) !== T.sz[q]) return false;
+  }
+  return true;
+}
+function findMatch(row, from, dir, T){
+  const d = row.sig.data, n = d.n;
+  if (dir > 0){ for (let k = ub(d, from); k < n; k++) if (matchAt(d, k, T) && (k === 0 || !matchAt(d, k - 1, T))) return d.t[k]; }
+  else { for (let k = lb(d, from) - 1; k >= 0; k--) if (matchAt(d, k, T) && (k === 0 || !matchAt(d, k - 1, T))) return d.t[k]; }
+  return null;
+}
+function gotoTime(t, msg){
+  S.A = t; centerOn(t, true); updateValues(); requestDraw(); updateHash(); if (msg) toast(msg + ' ' + fmtT(t)); renderPanel();
+}
+function doEdge(dir){
+  const r = selRow(); if (!r){ toast('Select a signal row first (click its name)'); return; }
+  const from = S.A != null ? S.A : V.t0;
+  const t = findEdge(r, from, dir, el.edgeKind.value);
+  if (t == null) toast('No ' + (dir > 0 ? 'next' : 'previous') + ' edge for ' + r.sig.name); else gotoTime(t, r.sig.name + ' edge at');
+}
+function doMatch(dir){
+  const r = selRow(); if (!r){ toast('Select a signal row first (click its name)'); return; }
+  const T = parseMatch(el.matchIn.value, r);
+  if (!T){ el.matchMsg.textContent = 'type a value first'; el.matchIn.focus(); return; }
+  if (T.err){ el.matchMsg.textContent = T.err + ' (radix ' + RADIX_LBL[r.radix] + ')'; return; }
+  const t = findMatch(r, S.A != null ? S.A : (dir > 0 ? V.t0 - 1 : V.t1 + 1), dir, T);
+  if (t == null){ el.matchMsg.textContent = 'no ' + (dir > 0 ? 'later' : 'earlier') + ' match'; return; }
+  el.matchMsg.textContent = ''; gotoTime(t, 'match at');
+}
+
+/* ---------- measurements ---------- */
+function summarize(arr){
+  if (!arr.length) return null;
+  let s = 0, mn = Infinity, mx = -Infinity; for (const v of arr){ s += v; if (v < mn) mn = v; if (v > mx) mx = v; }
+  const mean = s / arr.length; let q = 0; for (const v of arr) q += (v - mean) * (v - mean);
+  return {n:arr.length, mean, min:mn, max:mx, sd:Math.sqrt(q / arr.length)};
+}
+function edgeLists(d, ta, tb){
+  const rise = [], fall = [];
+  for (let k = Math.max(1, lb(d, ta)); k < d.n && d.t[k] <= tb; k++){ const e = edgeKindAt(d, k); if (e === 1) rise.push(d.t[k]); else if (e === -1) fall.push(d.t[k]); }
+  return {rise, fall};
+}
+function diffs(a){ const o = []; for (let i = 1; i < a.length; i++) o.push(a[i] - a[i - 1]); return o; }
+function measureRow(r, ta, tb){
+  const d = r.sig.data, out = {range:[ta, tb]};
+  const i0 = lb(d, ta), i1 = ub(d, tb); out.changes = Math.max(0, i1 - i0);
+  if (r.sig.width === 1 && !d.real){
+    const {rise, fall} = edgeLists(d, ta, tb);
+    out.rise = rise.length; out.fall = fall.length;
+    out.period = summarize(diffs(rise)); if (!out.period) out.period = summarize(diffs(fall));
+    const hi = [], lo = [];
+    let fi = 0; for (const rt of rise){ while (fi < fall.length && fall[fi] <= rt) fi++; if (fi < fall.length) hi.push(fall[fi] - rt); }
+    let ri = 0; for (const ft of fall){ while (ri < rise.length && rise[ri] <= ft) ri++; if (ri < rise.length) lo.push(rise[ri] - ft); }
+    out.high = summarize(hi); out.low = summarize(lo);
+    if (out.period && out.high && out.period.mean > 0) out.duty = out.high.mean / out.period.mean;
+  } else {
+    const iv = []; for (let k = Math.max(1, i0) + 1; k < i1; k++) iv.push(d.t[k] - d.t[k - 1]);
+    out.interval = summarize(iv.filter(v => v > 0));
+  }
+  return out;
+}
+function scanClocks(){
+  const res = [], seen = new Set(); let scanned = 0;
+  for (const s of D.sigs){
+    if (s.width !== 1 || s.data.real || seen.has(s.data)) continue; seen.add(s.data); if (++scanned > 30000) break;
+    const d = s.data; if (d.n < 9) continue;
+    const rise = []; for (let k = 1; k < d.n; k++) if (edgeKindAt(d, k) === 1) rise.push(d.t[k]);
+    if (rise.length < 5) continue;
+    const p = summarize(diffs(rise)); if (!p || p.mean <= 0) continue;
+    const cv = p.sd / p.mean; if (cv > 0.05) continue;
+    res.push({sig:s, rises:rise.length, p, cv});
+  }
+  res.sort((a, b) => b.rises - a.rises); return res;
+}
+function defaultGlitchThr(){
+  const c = scanClocks(); if (c.length) return c[0].p.mean / 4;
+  return Math.max(1, (D.tmax - D.tmin) / 2000);
+}
+function findGlitches(sig, thr){
+  const d = sig.data, out = [], n = d.n, t = d.t;
+  for (let i = 0; i < n - 1; i++){
+    const dur = t[i + 1] - t[i];
+    if (dur === 0){
+      if (i === 0 || t[i - 1] === t[i]) continue;      // report a same-time group once, not the initial dump
+      out.push({sig, t:t[i], w:0, kind:'zero-width (several changes at the same time)'});
+    } else if (i > 0 && dur < thr){
+      let kind = 'short-lived value';
+      if (sig.width === 1 && !d.real){ kind = xzOf(d, i) ? 'short x/z' : (d.v[i] & 1) ? 'short high pulse' : 'short low pulse'; }
+      out.push({sig, t:t[i], w:dur, kind});
+    }
+    if (out.length >= 2000) break;
+  }
+  return out;
+}
+
+/* ---------- bottom panel ---------- */
+function statRow(label, s){ return s ? '<tr><td>' + label + '</td><td class="n">' + s.n + '</td><td class="n">' + fmtT(s.mean, 5) + '</td><td class="n">' + fmtT(s.min, 5) + '</td><td class="n">' + fmtT(s.max, 5) + '</td><td class="n">' + fmtT(s.sd, 3) + '</td></tr>' : ''; }
+function renderMeasure(){
+  const r = selRow(); const b = el.pbody;
+  if (!r){ b.innerHTML = '<p class="note">Click a signal name to select it, then measure. Clock period, frequency, duty cycle and pulse widths are computed from its edges, over the A..B range if both cursors are set, otherwise over the whole dump.</p>' + clockScanHtml(); wireScan(); return; }
+  const ranged = S.A != null && S.B != null, ta = ranged ? Math.min(S.A, S.B) : D.tmin, tb = ranged ? Math.max(S.A, S.B) : D.tmax;
+  const m = measureRow(r, ta, tb); let h = '<div class="row"><b>' + esc(r.sig.path) + '</b><span class="note">range: ' + (ranged ? 'cursors A..B' : 'whole dump') + ' (' + fmtT(ta) + ' .. ' + fmtT(tb) + '), ' + m.changes + ' value changes</span></div>';
+  if (r.sig.width === 1 && !r.sig.data.real){
+    if (m.period){
+      const f = m.period.mean > 0 ? 1 / (m.period.mean * secPerUnit()) : NaN;
+      h += '<div class="row"><span class="chip">period <b>' + fmtT(m.period.mean, 6) + '</b></span><span class="chip">frequency <b>' + fmtFreq(f) + '</b></span>' +
+           (m.duty != null ? '<span class="chip">duty <b>' + (m.duty * 100).toFixed(1) + '%</b></span>' : '') +
+           '<span class="chip">jitter (sd/mean) <b>' + (m.period.mean ? (m.period.sd / m.period.mean * 100).toFixed(2) : '-') + '%</b></span>' +
+           '<span class="chip">edges <b>' + m.rise + ' rising / ' + m.fall + ' falling</b></span></div>';
+      h += '<table><tr><th></th><th>n</th><th>mean</th><th>min</th><th>max</th><th>std dev</th></tr>' + statRow('period', m.period) + statRow('high width', m.high) + statRow('low width', m.low) + '</table>';
+    } else h += '<p class="note">Fewer than two clean 0&rarr;1 (or 1&rarr;0) edges in this range, so no period can be computed.</p>';
+  } else if (m.interval){
+    h += '<div class="row"><span class="chip">changes <b>' + m.changes + '</b></span><span class="chip">mean interval <b>' + fmtT(m.interval.mean, 5) + '</b></span><span class="chip">min <b>' + fmtT(m.interval.min, 5) + '</b></span><span class="chip">max <b>' + fmtT(m.interval.max, 5) + '</b></span></div>' +
+         '<p class="note">For buses this is the spacing between value changes, not a clock period. Select a 1-bit signal for period / frequency / duty.</p>';
+  } else h += '<p class="note">Not enough changes in range.</p>';
+  b.innerHTML = h + clockScanHtml(); wireScan();
+}
+function clockScanHtml(){
+  if (!S.pnl.clocks) return '<div class="row" style="margin-top:8px"><button id="bScan">Scan all 1-bit signals for clocks</button><span class="note">lists regular periodic signals (period spread under 5%)</span></div>';
+  const c = S.pnl.clocks; if (!c.length) return '<p class="note">No regular clock-like signal found.</p><button id="bScan">Rescan</button>';
+  let h = '<table style="margin-top:6px"><tr><th>clock candidate</th><th>rising edges</th><th>period</th><th>frequency</th><th>spread</th><th></th></tr>';
+  c.slice(0, 12).forEach((x, i) => { h += '<tr class="clk" data-ci="' + i + '"><td>' + esc(x.sig.path) + '</td><td class="n">' + x.rises + '</td><td class="n">' + fmtT(x.p.mean, 5) + '</td><td class="n">' + fmtFreq(1 / (x.p.mean * secPerUnit())) + '</td><td class="n">' + (x.cv * 100).toFixed(2) + '%</td><td class="note">click to add</td></tr>'; });
+  return h + '</table><button id="bScan" style="margin-top:6px">Rescan</button>';
+}
+function wireScan(){
+  const b = $('#bScan'); if (b) b.onclick = () => { S.pnl.clocks = scanClocks(); renderMeasure(); };
+  el.pbody.querySelectorAll('tr.clk').forEach(tr => tr.onclick = () => { const x = S.pnl.clocks[+tr.dataset.ci]; addSignal(x.sig); S.sel = S.rows.findIndex(r => r.sig === x.sig); afterRowsChange(); selectRow(S.sel); });
+}
+function renderGlitch(){
+  const b = el.pbody; if (S.pnl.thr == null) S.pnl.thr = defaultGlitchThr();
+  const un = D.tsMag === 1 ? D.tsUnit : D.tsMag + ' ' + D.tsUnit;
+  b.innerHTML = '<div class="row"><label>pulse / value narrower than <input type="number" id="gThr" min="0" step="any" style="width:90px" value="' + trimNum(S.pnl.thr, 6) + '"> ' + esc(un) + '</label>' +
+    '<label>in <select id="gScope"><option value="sel">selected signal</option><option value="all">all signals on screen</option></select></label><button id="bGl" class="primary">Find glitches</button>' +
+    '<span class="note">default = 1/4 of the fastest detected clock period. Also reports zero-width events (several changes in the same timestamp).</span></div><div id="gRes"></div>';
+  $('#gScope').value = S.pnl.gscope || 'sel';
+  $('#bGl').onclick = () => {
+    const thr = parseFloat($('#gThr').value); S.pnl.thr = isFinite(thr) ? thr : 0; S.pnl.gscope = $('#gScope').value;
+    const rows = S.pnl.gscope === 'all' ? S.rows : (selRow() ? [selRow()] : []);
+    if (!rows.length){ $('#gRes').innerHTML = '<p class="note">Select a signal row (or choose "all signals on screen").</p>'; return; }
+    let all = []; for (const r of rows) all = all.concat(findGlitches(r.sig, S.pnl.thr));
+    S.pnl.gl = all; showGlitches();
+  };
+  if (S.pnl.gl) showGlitches();
+}
+function showGlitches(){
+  const gl = S.pnl.gl, box = $('#gRes'); if (!box) return;
+  if (!gl.length){ box.innerHTML = '<p class="note">No glitches found at this threshold.</p>'; return; }
+  let h = '<p class="note">' + gl.length + ' event(s)' + (gl.length >= 2000 ? ' (list capped)' : '') + '. Click a row to jump there.</p><table><tr><th>signal</th><th>time</th><th>width</th><th>kind</th></tr>';
+  gl.slice(0, 300).forEach((g, i) => { h += '<tr class="clk" data-gi="' + i + '"><td>' + esc(g.sig.path) + '</td><td class="n">' + fmtT(g.t) + '</td><td class="n">' + fmtT(g.w) + '</td><td>' + g.kind + '</td></tr>'; });
+  box.innerHTML = h + '</table>';
+  box.querySelectorAll('tr.clk').forEach(tr => tr.onclick = () => {
+    const g = gl[+tr.dataset.gi]; const idx = S.rows.findIndex(r => r.sig === g.sig); if (idx >= 0) selectRow(idx);
+    const sp = Math.max(g.w * 12, (V.t1 - V.t0) > g.w * 400 ? g.w * 40 : (V.t1 - V.t0));
+    S.A = g.t; if (g.w > 0) S.B = g.t + g.w; else S.B = null;
+    setView(g.t - sp / 2, g.t + sp / 2, true); updateValues(); requestDraw(); updateHash();
+  });
+}
+function renderInfo(){
+  const m = D.meta || {}, nsig = D.sigs.length;
+  const row = (k, v) => '<tr><td>' + k + '</td><td>' + esc(v) + '</td></tr>';
+  let tog = '';
+  if (S.rows.length){
+    tog = '<h4 style="margin:10px 0 4px">Signals on screen</h4><table><tr><th>signal</th><th>width</th><th>changes</th><th>bit toggles</th><th>x/z</th></tr>';
+    for (const r of S.rows){ const d = r.sig.data, tg = countToggles(d); tog += '<tr><td>' + esc(r.sig.path) + '</td><td class="n">' + r.sig.width + '</td><td class="n">' + Math.max(0, d.n - 1) + '</td><td class="n">' + tg + '</td><td>' + (d.m ? 'yes' : '') + '</td></tr>'; }
+    tog += '</table>';
+  }
+  el.pbody.innerHTML = '<table class="kv">' + row('file', D.name) + row('timescale', m.timescale || '') + row('time span', fmtT(D.tmin) + ' .. ' + fmtT(D.tmax)) + row('signals', nsig + ' declared, ' + D.datas.length + ' distinct nets') +
+    row('value changes', D.nChanges.toLocaleString()) + row('size', (D.bytes / 1048576).toFixed(2) + ' MB, parsed in ' + (D.parseMs | 0) + ' ms') + row('date', m.date || '-') + row('version', m.version || '-') +
+    (m.comments && m.comments.length ? row('comment', m.comments.join(' | ')) : '') + '</table>' + tog;
+}
+function countToggles(d){
+  if (d.real) return d.n - 1;
+  let tg = 0; const nw = d.nw;
+  for (let k = 1; k < d.n; k++){
+    for (let q = 0; q < nw; q++){
+      const a = d.v[k * nw + q], b = d.v[(k - 1) * nw + q];
+      let known = 0xFFFFFFFF; if (d.m) known = ~(d.m[k * nw + q] | d.m[(k - 1) * nw + q]);
+      let x = (a ^ b) & known; x = x - ((x >>> 1) & 0x55555555); x = (x & 0x33333333) + ((x >>> 2) & 0x33333333); tg += (((x + (x >>> 4)) & 0x0F0F0F0F) * 0x01010101) >>> 24;
+    }
+  }
+  return tg;
+}
+function renderPanel(){
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === S.tab));
+  if (!D.root) return;
+  if (S.tab === 'measure') renderMeasure(); else if (S.tab === 'glitch') renderGlitch(); else renderInfo();
+}
+
+/* ---------- signal tree + search ---------- */
+function sigRowEl(sig, showPath){
+  const e = document.createElement('div'); e._sig = sig;
+  e.className = 'sg' + (S.rows.some(r => r.sig === sig) ? ' added' : '');
+  e.innerHTML = '<span class="ck">' + (e.classList.contains('added') ? '✓' : '') + '</span><span class="nm" title="' + esc(sig.path) + '">' + esc(sig.name) + '</span>' + (showPath ? '<span class="pp">' + esc(sig.scope.path) + '</span>' : '') +
+    '<span class="w">' + (sig.data.real ? 'real' : sig.width > 1 ? '[' + (sig.width - 1) + ':0]' : '') + '</span>';
+  e.onclick = () => toggleSig(sig);
+  return e;
+}
+function toggleSig(sig){
+  const i = S.rows.findIndex(r => r.sig === sig);
+  if (i >= 0) removeRowAt(i); else { addSignal(sig); S.sel = S.rows.length - 1; afterRowsChange(); selectRow(S.sel); el.rows.scrollTop = el.rows.scrollHeight; }
+}
+function markTree(){
+  const on = new Set(S.rows.map(r => r.sig));
+  el.tree.querySelectorAll('.sg').forEach(e => { const a = on.has(e._sig); e.classList.toggle('added', a); e.firstChild.textContent = a ? '✓' : ''; });
+}
+function scopeEl(nd, depth){
+  const e = document.createElement('div'); e.className = 'nd';
+  const h = document.createElement('div'); h.className = 'nh';
+  h.innerHTML = '<span class="tw">▸</span><span>' + esc(nd.name) + '</span><span class="cnt">' + nd.n + '</span><button class="all" title="Add all signals directly in this scope">+ all</button>';
+  const kids = document.createElement('div'); kids.className = 'kids'; kids.style.display = 'none'; let built = false;
+  const toggle = () => {
+    const open = kids.style.display === 'none'; kids.style.display = open ? '' : 'none'; h.firstChild.textContent = open ? '▾' : '▸';
+    if (open && !built){ built = true; for (const k of nd.kids) kids.appendChild(scopeEl(k, depth + 1)); for (const s of nd.sigs) kids.appendChild(sigRowEl(s)); }
+  };
+  h.onclick = (ev) => { if (ev.target.classList.contains('all')) { let c = 0; for (const s of nd.sigs){ if (c >= 256) break; if (addSignal(s)) c++; } afterRowsChange(); toast('Added ' + c + ' signals from ' + nd.name); return; } toggle(); };
+  e.appendChild(h); e.appendChild(kids); e._open = () => { if (kids.style.display === 'none') toggle(); };
+  if (depth === 0) toggle();
+  return e;
+}
+function renderTree(){
+  el.tree.textContent = '';
+  const q = el.q.value.trim();
+  if (!q){
+    const root = D.root; if (root.sigs.length){ const top = {name:'(top level)', kids:[], sigs:root.sigs, n:root.sigs.length}; el.tree.appendChild(scopeEl(top, 0)); }
+    for (const k of root.kids) el.tree.appendChild(scopeEl(k, 0));
+    el.qhint.textContent = D.sigs.length + ' signals. Click a signal to add / remove it. Hover a scope for "+ all".'; return;
+  }
+  let test;
+  if (q.length > 2 && q[0] === '/' && q[q.length - 1] === '/'){ try { const re = new RegExp(q.slice(1, -1), 'i'); test = s => re.test(s.path); } catch (e) { el.qhint.textContent = 'invalid regex'; return; } }
+  else { const words = q.toLowerCase().split(/\s+/); test = s => words.every(w => s.lpath.indexOf(w) >= 0); }
+  let c = 0, shown = 0; const seen = new Set();
+  for (const s of D.sigs){
+    if (!test(s)) continue; c++;
+    if (shown < 400){ el.tree.appendChild(sigRowEl(s, true)); shown++; }
+  }
+  el.qhint.textContent = c + ' match' + (c === 1 ? '' : 'es') + (c > shown ? ', showing first ' + shown : '');
+}
+
+/* ---------- share state in URL hash ---------- */
+const enc = (s) => encodeURIComponent(s).replace(/~/g, '%7E').replace(/[!'()*]/g, ch => '%' + ch.charCodeAt(0).toString(16).toUpperCase());
+function stateHash(){
+  const parts = [];
+  if (D.demo) parts.push('d=' + enc(D.demo));
+  if (S.rows.length) parts.push('s=' + S.rows.map(r => enc(r.sig.path) + ';' + r.radix + (r.analog && !r.sig.data.real ? 'a' : '')).join(','));
+  if (S.sel >= 0) parts.push('sel=' + S.sel);
+  if (S.A != null) parts.push('a=' + S.A);
+  if (S.B != null) parts.push('b=' + S.B);
+  parts.push('v=' + trimNum(V.t0, 12) + '~' + trimNum(V.t1, 12));
+  return parts.join('&');
+}
+function parseHash(h){
+  h = (h || '').replace(/^#/, ''); const o = {}; if (!h) return o;
+  for (const p of h.split('&')){ const i = p.indexOf('='); if (i > 0) o[p.slice(0, i)] = p.slice(i + 1); }
+  return o;
+}
+let hashTimer = 0;
+function updateHash(){
+  clearTimeout(hashTimer);
+  hashTimer = setTimeout(() => { if (!D.root) return; try { history.replaceState(null, '', '#' + stateHash()); } catch (e) {} }, 250);
+}
+function applyHashSignals(o){
+  if (!o.s) return 0;
+  let n = 0;
+  for (const item of o.s.split(',')){
+    const [p, fl] = item.split(';'); let path; try { path = decodeURIComponent(p); } catch (e) { continue; }
+    const sig = D.pathMap.get(path); if (!sig) continue;
+    const r = addSignal(sig); if (!r) continue;
+    if (fl){ const rx = fl[0]; if ('bhds'.indexOf(rx) >= 0 && sig.width > 1) r.radix = rx; if (fl.indexOf('a') >= 0 && sig.width > 1) r.analog = true; }
+    n++;
+  }
+  return n;
+}
+
+/* ---------- export ---------- */
+function download(name, blob){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+function baseName(){ return (D.name || 'dump').replace(/\.[^.]*$/, '').replace(/[^\w.-]+/g, '_'); }
+function exportPNG(){
+  if (!D.root) return;
+  const nameW = 330, valW = 90, left = nameW + valW + (S.B != null ? valW : 0), Wp = Math.max(300, W), head = 52, foot = 18, sc = 2;
+  const Hp = Math.max(60, S.totalH || 60), TW = left + Wp, TH = head + Hp + foot;
+  const cv = document.createElement('canvas'); cv.width = TW * sc; cv.height = TH * sc; const ctx = cv.getContext('2d'); ctx.setTransform(sc, 0, 0, sc, 0, 0);
+  ctx.fillStyle = CL.bg; ctx.fillRect(0, 0, TW, TH);
+  ctx.fillStyle = CL.ink; ctx.font = 'bold 13px system-ui,sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  ctx.fillText('VCD-Studio  |  ' + D.name, 10, 14);
+  ctx.font = '11px ui-monospace,Menlo,Consolas,monospace'; ctx.fillStyle = CL.muted;
+  ctx.fillText(fmtT(V.t0, 5) + ' .. ' + fmtT(V.t1, 5) + '   timescale ' + (D.meta.timescale || ''), 10, 30);
+  const ppt = Wp / (V.t1 - V.t0);
+  ctx.save(); ctx.translate(left, 8); ctx.beginPath(); ctx.rect(0, 0, Wp, 44); ctx.clip(); drawRulerOn(ctx, Wp, 44, ppt, V.t0, true); ctx.restore();
+  ctx.save(); ctx.translate(left, head); ctx.beginPath(); ctx.rect(0, 0, Wp, Hp); ctx.clip();
+  paintWaves(ctx, Wp, Hp, 0, V.t0, ppt, {noSel:true, noHover:true}); ctx.restore();
+  // names
+  S.rows.forEach((r, i) => {
+    const y = head + r.y; ctx.fillStyle = (i & 1) ? CL.alt : 'transparent'; ctx.fillRect(0, y, left, r.h);
+    ctx.strokeStyle = CL.line; ctx.beginPath(); ctx.moveTo(0, y + r.h - .5); ctx.lineTo(left, y + r.h - .5); ctx.stroke();
+    ctx.fillStyle = CL.ink; ctx.font = '12px system-ui,sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    let nm = r.sig.name + (r.sig.range || (r.sig.width > 1 ? '[' + (r.sig.width - 1) + ':0]' : '')); ctx.fillText(nm.length > 38 ? nm.slice(0, 37) + '…' : nm, 8, y + r.h / 2);
+    ctx.font = '11px ui-monospace,Menlo,Consolas,monospace'; ctx.textAlign = 'right';
+    const vals = (t, col, x) => { if (t == null) return; const d = r.sig.data, s = fmtValue(d, idxAt(d, t), r.radix, r.sig.width); ctx.fillStyle = xzOf(d, idxAt(d, t)) ? CL.x : col; ctx.fillText(s.length > 13 ? s.slice(0, 12) + '…' : s, x, y + r.h / 2); };
+    vals(S.A, CL.A, nameW + valW - 6); vals(S.B, CL.B, nameW + valW * 2 - 6);
+  });
+  ctx.fillStyle = CL.muted; ctx.font = '10px system-ui,sans-serif'; ctx.textAlign = 'left'; ctx.fillText('exported by VCD-Studio (offline viewer)', 10, TH - 9);
+  ctx.strokeStyle = CL.line; ctx.beginPath(); ctx.moveTo(left - .5, head); ctx.lineTo(left - .5, head + Hp); ctx.stroke();
+  cv.toBlob(b => { download(baseName() + '.png', b); toast('PNG exported (' + TW + 'x' + TH + ' @2x)'); }, 'image/png');
+  return {w: TW * sc, h: TH * sc};
+}
+function buildSummary(){
+  const L = [], sps = secPerUnit();
+  L.push('VCD-Studio summary'); L.push('file        : ' + D.name); L.push('timescale   : ' + (D.meta.timescale || '?'));
+  L.push('time span   : ' + fmtT(D.tmin) + ' .. ' + fmtT(D.tmax) + '  (' + fmtT(D.tmax - D.tmin) + ')');
+  L.push('signals     : ' + D.sigs.length + ' declared, ' + D.datas.length + ' distinct nets, ' + D.nChanges + ' value changes');
+  L.push('view        : ' + fmtT(V.t0) + ' .. ' + fmtT(V.t1));
+  L.push('cursor A    : ' + (S.A == null ? '-' : fmtT(S.A)));
+  L.push('cursor B    : ' + (S.B == null ? '-' : fmtT(S.B)));
+  if (S.A != null && S.B != null){ const dt = Math.abs(S.B - S.A); L.push('delta       : ' + fmtT(dt) + (dt > 0 ? '   (1/delta = ' + fmtFreq(1 / (dt * sps)) + ')' : '')); }
+  L.push('');
+  L.push('Signals on screen:');
+  for (const r of S.rows){
+    const d = r.sig.data, rng = r.sig.width > 1 ? '[' + (r.sig.width - 1) + ':0]' : '';
+    L.push('  ' + r.sig.path + rng + '  (' + (d.real ? 'real' : r.sig.width + ' bit, ' + RADIX_LBL[r.radix]) + ')');
+    L.push('      changes ' + Math.max(0, d.n - 1) + ', bit toggles ' + countToggles(d) + ', has x/z: ' + (d.m ? 'yes' : 'no'));
+    const at = (t, nm) => { if (t != null) L.push('      ' + nm + ' = ' + fmtValue(d, idxAt(d, t), r.radix, r.sig.width)); };
+    at(S.A, 'at A'); at(S.B, 'at B');
+    if (r.sig.width === 1 && !d.real){
+      const m = measureRow(r, D.tmin, D.tmax);
+      if (m.period) L.push('      period ' + fmtT(m.period.mean, 5) + ' (' + fmtFreq(1 / (m.period.mean * sps)) + '), spread ' + (m.period.sd / m.period.mean * 100).toFixed(2) + '%' + (m.duty != null ? ', duty ' + (m.duty * 100).toFixed(1) + '%' : '') + ', rising edges ' + m.rise);
+    }
+  }
+  if (S.pnl.gl && S.pnl.gl.length){
+    L.push(''); L.push('Last glitch scan (threshold ' + fmtT(S.pnl.thr) + '): ' + S.pnl.gl.length + ' event(s)');
+    for (const g of S.pnl.gl.slice(0, 40)) L.push('  ' + g.sig.path + ' @ ' + fmtT(g.t) + ' width ' + fmtT(g.w) + ' : ' + g.kind);
+  }
+  L.push(''); L.push('Generated by VCD-Studio (single-file offline viewer). Share state: #' + stateHash());
+  return L.join('\n') + '\n';
+}
+
+/* ---------- loading ---------- */
+function setDump(res, name, demoKey, parseMs){
+  Object.assign(D, {tsMag:res.tsMag, tsUnit:res.tsUnit, tmin:res.tmin, tmax:Math.max(res.tmax, res.tmin + 1), sigs:res.sigs, root:res.root, meta:res.meta, nChanges:res.nChanges, bytes:res.bytes,
+    datas:res.datas, name, demo:demoKey || '', parseMs, pathMap:new Map()});
+  for (const s of res.sigs) if (!D.pathMap.has(s.path)) D.pathMap.set(s.path, s);
+  S.rows = []; S.sel = -1; S.A = S.B = null; S.pnl = {}; el.q.value = '';
+  const o = parseHash(location.hash);
+  let n = 0, viewFromHash = false;
+  const sameDemo = demoKey ? o.d === demoKey : true;
+  if (o.s && sameDemo) n = applyHashSignals(o);
+  if (!n){
+    const def = demoKey && DEMOS[demoKey] ? DEMOS[demoKey].defaults : null;
+    if (def) for (const p of def){ const s = D.pathMap.get(p); if (s) addSignal(s); }
+    else { // first scope that has signals, up to 12
+      const walk = (nd) => { for (const s of nd.sigs){ if (S.rows.length >= 12) return; if (s.type !== 'parameter') addSignal(s); } if (S.rows.length === 0) for (const k of nd.kids){ walk(k); if (S.rows.length) return; } };
+      walk(D.root);
+    }
+  } else {
+    if (o.sel != null && +o.sel < S.rows.length) S.sel = +o.sel;
+    if (o.a != null && isFinite(+o.a)) S.A = +o.a; if (o.b != null && isFinite(+o.b)) S.B = +o.b;
+    if (o.v){ const [a, b] = o.v.split('~').map(Number); if (isFinite(a) && isFinite(b) && b > a){ V.t0 = a; V.t1 = b; viewFromHash = true; } }
+  }
+  if (S.sel < 0 && S.rows.length) S.sel = 0;
+  document.title = 'VCD-Studio - ' + name; el.fname.textContent = name; el.fname.title = name;
+  el.sFile.textContent = res.sigs.length + ' signals, ' + res.nChanges.toLocaleString() + ' changes, ' + (res.bytes / 1048576).toFixed(2) + ' MB, parsed in ' + Math.round(parseMs) + ' ms';
+  el.emptyMsg.innerHTML = 'No signals on screen.<br>Pick signals in the tree on the left (click to add).';
+  renderTree(); layoutRows(); renderNames(); resizeCanvas();
+  if (!viewFromHash) fitView(false); else setView(V.t0, V.t1, false);
+  updateValues(); renderPanel(); markTree(); requestDraw(); updateHash();
+  return n;
+}
+function parseBuffer(u8){
+  const t0 = performance.now(), p = new VcdParser(); p.feed(u8, true); const res = p.finish();
+  return {res, ms: performance.now() - t0};
+}
+async function loadFile(file){
+  const t0 = performance.now(); const p = new VcdParser(); const CH = 16 * 1048576;
+  try {
+    for (let off = 0; off < file.size; off += CH){
+      const buf = new Uint8Array(await file.slice(off, off + CH).arrayBuffer());
+      p.feed(buf, off + CH >= file.size);
+      el.sFile.textContent = 'reading ' + Math.min(100, Math.round((off + CH) / file.size * 100)) + '% ...';
+      await new Promise(r => setTimeout(r, 0));
+    }
+    if (file.size === 0) p.feed(new Uint8Array(0), true);
+    const res = p.finish();
+    if (!res.sigs.length){ toast('No signals found: is this a VCD file?'); el.sFile.textContent = ''; return false; }
+    setDump(res, file.name, '', performance.now() - t0); toast('Loaded ' + file.name); return true;
+  } catch (e) { console.error(e); toast('Could not read file: ' + e.message); return false; }
+}
+async function inflateB64(b64){
+  const bin = atob(b64), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  const ds = new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(ds).arrayBuffer());
+}
+async function loadDemo(key){
+  const dm = DEMOS[key]; if (!dm) return;
+  try {
+    const u8 = await inflateB64(dm.z); const {res, ms} = parseBuffer(u8);
+    setDump(res, dm.file, key, ms);
+  } catch (e) { console.error(e); toast('Could not unpack the demo (browser lacks DecompressionStream?)'); }
+}
+
+/* ---------- interaction ---------- */
+function timeAtX(x){ return V.t0 + x / (W / (V.t1 - V.t0)); }
+function rowAtY(y){ const yy = y + el.rows.scrollTop; for (let i = 0; i < S.rows.length; i++) if (yy >= S.rows[i].y && yy < S.rows[i].y + S.rows[i].h) return i; return -1; }
+function snapTime(t, ri){
+  if (!el.snap.checked) return t;
+  const ppt = W / (V.t1 - V.t0), tol = 6 / ppt;
+  const rows = ri >= 0 ? [S.rows[ri]] : S.rows; let best = null, bd = tol;
+  for (const r of rows){
+    const d = r.sig.data, k = ub(d, t);
+    for (const q of [k - 1, k]){ if (q >= 0 && q < d.n){ const dd = Math.abs(d.t[q] - t); if (dd <= bd){ bd = dd; best = d.t[q]; } } }
+  }
+  return best != null ? best : t;
+}
+function hoverText(x, y){
+  const t = timeAtX(x); let s = 'T = ' + fmtT(t, 6);
+  const ri = rowAtY(y); if (ri >= 0){ const r = S.rows[ri], d = r.sig.data; s += '   ' + r.sig.name + ' = ' + fmtValue(d, idxAt(d, t), r.radix, r.sig.width); }
+  el.sHover.textContent = s;
+}
+function initCanvasEvents(){
+  const cv = el.cv; let pan = null;
+  cv.addEventListener('pointerdown', ev => {
+    if (ev.button !== 0) return; cv.setPointerCapture(ev.pointerId);
+    pan = {x:ev.clientX, y:ev.clientY, t0:V.t0, t1:V.t1, moved:false, shift:ev.shiftKey, rect:cv.getBoundingClientRect()};
+  });
+  cv.addEventListener('pointermove', ev => {
+    const rect = cv.getBoundingClientRect(), x = ev.clientX - rect.left, y = ev.clientY - rect.top;
+    if (pan){
+      const dx = ev.clientX - pan.x;
+      if (!pan.moved && Math.abs(dx) > 3) pan.moved = true;
+      if (pan.moved){ const ppt = W / (pan.t1 - pan.t0), [a, b] = clampView(pan.t0 - dx / ppt, pan.t1 - dx / ppt); V.t0 = a; V.t1 = b; S.hover = null; requestDraw(); updateHash(); }
+    } else { S.hover = timeAtX(x); requestDraw(); }
+    hoverText(x, y);
+  });
+  const up = ev => {
+    if (!pan) return; const p = pan; pan = null;
+    if (!p.moved){
+      const x = ev.clientX - p.rect.left, y = ev.clientY - p.rect.top, ri = rowAtY(y), t = snapTime(timeAtX(x), ri);
+      if (ri >= 0) selectRow(ri);
+      if (p.shift) S.B = t; else S.A = t;
+      updateValues(); requestDraw(); updateHash(); renderPanel();
+    }
+  };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', () => { pan = null; });
+  cv.addEventListener('pointerleave', () => { S.hover = null; requestDraw(); });
+  cv.addEventListener('wheel', ev => {
+    if (ev.ctrlKey || ev.metaKey){
+      ev.preventDefault(); const rect = cv.getBoundingClientRect(); const f = Math.exp(ev.deltaY * 0.0022);
+      zoomBy(f, timeAtX(ev.clientX - rect.left), false); updateHash();
+    } else if (ev.shiftKey || Math.abs(ev.deltaX) > Math.abs(ev.deltaY)){
+      ev.preventDefault(); const d = ev.shiftKey && !ev.deltaX ? ev.deltaY : ev.deltaX; panBy(d / W, false); updateHash();
+    }
+  }, {passive:false});
+  el.rows.addEventListener('scroll', requestDraw);
+  // ruler: click = cursor A, drag = zoom range
+  const rl = el.ruler; let rd = null;
+  rl.addEventListener('pointerdown', ev => { rl.setPointerCapture(ev.pointerId); const rect = rl.getBoundingClientRect(); rd = {x:ev.clientX, a:timeAtX(ev.clientX - rect.left), moved:false, rect, shift:ev.shiftKey}; });
+  rl.addEventListener('pointermove', ev => {
+    if (!rd) return; if (Math.abs(ev.clientX - rd.x) > 4) rd.moved = true;
+    if (rd.moved){ S.drag = {zoom:true, a:rd.a, b:timeAtX(ev.clientX - rd.rect.left)}; requestDraw(); }
+  });
+  rl.addEventListener('pointerup', ev => {
+    if (!rd) return; const r = rd; rd = null; const t = timeAtX(ev.clientX - r.rect.left); S.drag = null;
+    if (r.moved){ const a = Math.min(r.a, t), b = Math.max(r.a, t); if (b - a > 1) setView(a, b, true); updateHash(); }
+    else { if (r.shift) S.B = t; else S.A = t; updateValues(); updateHash(); renderPanel(); }
+    requestDraw();
+  });
+}
+function inField(ev){ const t = ev.target; return t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA'); }
+function onKey(ev){
+  if (ev.key === 'Escape'){ if (el.help.open) el.help.close(); else if (inField(ev)) ev.target.blur(); return; }
+  if (inField(ev) || ev.ctrlKey || ev.metaKey) return;
+  if (el.help.open) return;
+  const k = ev.key, K = k.length === 1 ? k.toLowerCase() : k;
+  let handled = true;
+  if (K === 'o') el.fin.click();
+  else if (K === 't') setTheme(S.theme === 'dark' ? 'light' : 'dark');
+  else if (K === 'f') fitView(true);
+  else if (K === 'z'){ if (S.A != null && S.B != null){ const a = Math.min(S.A, S.B), b = Math.max(S.A, S.B), m = (b - a) * 0.05 || 1; setView(a - m, b + m, true); } else toast('Set cursors A (click) and B (Shift+click) first'); }
+  else if (K === '+' || K === '='){ zoomBy(0.5, null, true); }
+  else if (K === '-' || K === '_'){ zoomBy(2, null, true); }
+  else if (K === 'ArrowLeft'){ panBy(ev.shiftKey ? -0.5 : -0.1, true); }
+  else if (K === 'ArrowRight'){ panBy(ev.shiftKey ? 0.5 : 0.1, true); }
+  else if (K === 'ArrowUp'){ if (ev.altKey) moveRow(S.sel, S.sel - 1); else if (S.rows.length) selectRow(Math.max(0, S.sel - 1)); }
+  else if (K === 'ArrowDown'){ if (ev.altKey) moveRow(S.sel, S.sel + 1); else if (S.rows.length) selectRow(Math.min(S.rows.length - 1, S.sel + 1)); }
+  else if (K === 'Home'){ const sp = V.t1 - V.t0; setView(D.tmin - sp * 0.01, D.tmin - sp * 0.01 + sp, true); }
+  else if (K === 'End'){ const sp = V.t1 - V.t0; setView(D.tmax + sp * 0.01 - sp, D.tmax + sp * 0.01, true); }
+  else if (K === '/'){ el.q.focus(); el.q.select(); }
+  else if (K === 'n') doEdge(ev.shiftKey ? -1 : 1);
+  else if (K === 'p') doEdge(-1);
+  else if (K === ']') doMatch(1);
+  else if (K === '[') doMatch(-1);
+  else if (K === 'r'){ const r = selRow(); if (r && r.sig.width > 1 && !r.sig.data.real) cycleRadix(S.sel); }
+  else if (K === 'g'){ if (S.sel >= 0) toggleAnalog(S.sel); }
+  else if (K === 'Delete' || K === 'Backspace'){ if (S.sel >= 0) removeRowAt(S.sel); }
+  else if (K === 'c'){ S.A = S.B = null; updateValues(); requestDraw(); updateHash(); renderPanel(); }
+  else if (K === 'e'){ if (ev.shiftKey) exportText(); else exportPNG(); }
+  else if (K === 'l') copyLink();
+  else if (K === '?') el.help.showModal();
+  else handled = false;
+  if (handled) ev.preventDefault();
+}
+function exportText(){ if (!D.root) return; download(baseName() + '_summary.txt', new Blob([buildSummary()], {type:'text/plain'})); toast('Summary exported'); }
+function copyLink(){
+  const url = location.href.split('#')[0] + '#' + stateHash();
+  try { history.replaceState(null, '', '#' + stateHash()); } catch (e) {}
+  const done = () => toast('Link copied (selected signals, cursors, view)');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, () => toast('Link is in the address bar'));
+  else toast('Link is in the address bar');
+}
+
+/* ---------- init ---------- */
+function init(){
+  for (const id of ['cv','rows','names','cwrap','ruler','hdr','tree','q','qhint','fname','cA','cB','cD','cF','sHover','sView','sFile','pbody','toast','fin','demoSel','edgeKind','matchIn','matchMsg','snap','help','empty','emptyMsg','side','panel'])
+    el[id] = document.getElementById(id);
+  let th = null; try { th = localStorage.getItem('vcdstudio.theme'); } catch (e) {}
+  if (!th) th = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  setTheme(th);
+  for (const k of Object.keys(DEMOS)){ const o = document.createElement('option'); o.value = k; o.textContent = DEMOS[k].title; el.demoSel.appendChild(o); }
+  el.demoSel.onchange = () => { if (el.demoSel.value) loadDemo(el.demoSel.value); };
+  $('#bOpen').onclick = () => el.fin.click();
+  el.fin.onchange = () => { if (el.fin.files[0]) loadFile(el.fin.files[0]); el.fin.value = ''; };
+  $('#bFit').onclick = () => fitView(true); $('#bZin').onclick = () => zoomBy(0.5, null, true); $('#bZout').onclick = () => zoomBy(2, null, true);
+  $('#bZcur').onclick = () => onKey({key:'z', target:document.body, preventDefault(){}});
+  $('#bTheme').onclick = () => setTheme(S.theme === 'dark' ? 'light' : 'dark');
+  $('#bPng').onclick = exportPNG; $('#bTxt').onclick = exportText; $('#bLink').onclick = copyLink; $('#bHelp').onclick = () => el.help.showModal();
+  $('#helpClose').onclick = () => el.help.close();
+  $('#bPrev').onclick = () => doEdge(-1); $('#bNext').onclick = () => doEdge(1);
+  $('#bMPrev').onclick = () => doMatch(-1); $('#bMNext').onclick = () => doMatch(1);
+  el.matchIn.addEventListener('keydown', ev => { if (ev.key === 'Enter') doMatch(ev.shiftKey ? -1 : 1); });
+  $('#sidetoggle').onclick = () => el.side.classList.toggle('open');
+  let qt = 0; el.q.addEventListener('input', () => { clearTimeout(qt); qt = setTimeout(() => D.root && renderTree(), 80); });
+  document.querySelectorAll('.tab').forEach(t => t.onclick = () => { S.tab = t.dataset.tab; el.panel.classList.remove('min'); renderPanel(); });
+  $('#bMin').onclick = () => { el.panel.classList.toggle('min'); resizeCanvas(); };
+  document.addEventListener('keydown', onKey);
+  initCanvasEvents();
+  // drag and drop a file
+  let dc = 0; const drop = $('#drop');
+  const hasFiles = ev => ev.dataTransfer && Array.from(ev.dataTransfer.types || []).indexOf('Files') >= 0;
+  window.addEventListener('dragenter', ev => { if (hasFiles(ev)){ dc++; drop.classList.add('on'); } });
+  window.addEventListener('dragleave', ev => { if (hasFiles(ev)){ dc = Math.max(0, dc - 1); if (!dc) drop.classList.remove('on'); } });
+  window.addEventListener('dragover', ev => { if (hasFiles(ev)) ev.preventDefault(); });
+  window.addEventListener('drop', ev => { dc = 0; drop.classList.remove('on'); if (hasFiles(ev)){ ev.preventDefault(); const f = ev.dataTransfer.files[0]; if (f) loadFile(f); } });
+  window.addEventListener('resize', resizeCanvas);
+  if (window.ResizeObserver) new ResizeObserver(() => resizeCanvas()).observe(el.rows);
+  window.matchMedia && matchMedia('(prefers-color-scheme: dark)').addEventListener && matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => { try { if (localStorage.getItem('vcdstudio.theme')) return; } catch (x) {} setTheme(e.matches ? 'dark' : 'light'); });
+  window.addEventListener('hashchange', () => { /* manual hash edits: reload signals if same dump */
+    if (!D.root) return; const o = parseHash(location.hash); if (o.d && o.d !== D.demo && DEMOS[o.d]) loadDemo(o.d); });
+  const o = parseHash(location.hash);
+  loadDemo(o.d && DEMOS[o.d] ? o.d : 'counter');
+}
+window.VCDStudio = {drawNow, parseBuffer, VcdParser, S, V, D, fmtValue, findEdge, findMatch, parseMatch, measureRow, findGlitches, scanClocks, stateHash, buildSummary, exportPNG, get el(){ return el; }, loadFile, loadDemo, addSignal, afterRowsChange, setView, countToggles, W: () => W};
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+</script>
+</body>
+</html>

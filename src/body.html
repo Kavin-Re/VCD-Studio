@@ -1,0 +1,89 @@
+<header class="top">
+  <button id="sidetoggle" title="Signal tree">Tree</button>
+  <div class="brand">VCD<span>-Studio</span></div>
+  <button id="bOpen" class="primary" title="Open a .vcd file (O)">Open .vcd</button>
+  <select id="demoSel" title="Built-in demo dumps (generated with iverilog)"><option value="">Demo dumps...</option></select>
+  <span class="chip" id="fname" title="">no file</span>
+  <span class="sep"></span>
+  <button id="bFit" title="Zoom to fit (F)">Fit</button>
+  <button id="bZout" title="Zoom out (-)">&minus;</button>
+  <button id="bZin" title="Zoom in (+)">+</button>
+  <button id="bZcur" title="Zoom to cursors A..B (Z)">A&harr;B</button>
+  <span class="sep"></span>
+  <span class="chip a">A <b id="cA">-</b></span>
+  <span class="chip b">B <b id="cB">-</b></span>
+  <span class="chip">&Delta; <b id="cD">-</b> <span id="cF"></span></span>
+  <span class="spacer"></span>
+  <button id="bTheme" title="Toggle dark/light (T)">Theme</button>
+  <button id="bPng" title="Export PNG of the current view (E)">PNG</button>
+  <button id="bTxt" title="Export text summary (Shift+E)">Summary</button>
+  <button id="bLink" title="Copy a link that restores the selected signals (L)">Copy link</button>
+  <button id="bHelp" title="Keyboard shortcuts (?)">?</button>
+</header>
+<div class="tools">
+  <label>Edge of selected signal</label>
+  <button id="bPrev" title="Previous edge (P)">&#9664; prev</button>
+  <button id="bNext" title="Next edge (N)">next &#9654;</button>
+  <select id="edgeKind" title="Edge kind (1-bit signals)"><option value="any">any</option><option value="rise">rising</option><option value="fall">falling</option></select>
+  <span class="sep"></span>
+  <label for="matchIn">value</label>
+  <input type="text" id="matchIn" placeholder="e.g. 0xA5, 0b1010, x, z, 'd42" autocomplete="off" spellcheck="false">
+  <button id="bMPrev" title="Previous match ([)">&#9664;</button>
+  <button id="bMNext" title="Next match (])">&#9654;</button>
+  <span class="sep"></span>
+  <label><input type="checkbox" id="snap" checked> snap cursor to edges</label>
+  <span class="spacer"></span>
+  <span class="note" id="matchMsg"></span>
+</div>
+<div id="app">
+  <aside id="side">
+    <div class="sh">
+      <input type="search" id="q" placeholder="Search signals (words, or /regex/)" autocomplete="off" spellcheck="false">
+      <div class="hint" id="qhint">Click a signal to add / remove it. Hover a scope for "all".</div>
+    </div>
+    <div id="tree"></div>
+  </aside>
+  <main id="main">
+    <div id="hdr">
+      <div class="namehead"><span class="g">Signals (drag to reorder)</span><span class="va">at A</span><span class="vb">at B</span><span class="pad"></span></div>
+      <canvas id="ruler"></canvas>
+    </div>
+    <div id="rows">
+      <div id="names"></div>
+      <div id="cwrap"><canvas id="cv" tabindex="0"></canvas></div>
+      <div id="empty"><div id="emptyMsg"></div></div>
+    </div>
+    <div id="panel">
+      <div class="tabs">
+        <button class="tab on" data-tab="measure">Measure</button>
+        <button class="tab" data-tab="glitch">Glitches</button>
+        <button class="tab" data-tab="info">Info</button>
+        <span class="spacer"></span>
+        <button id="bMin" title="Collapse / expand panel" style="margin-bottom:2px">&#9662;</button>
+      </div>
+      <div id="pbody"></div>
+    </div>
+  </main>
+</div>
+<div id="status"><span id="sHover">&nbsp;</span><span id="sView"></span><span id="sFile"></span></div>
+<div id="drop">Drop a .vcd file to open it</div>
+<div id="toast"></div>
+<input type="file" id="fin" hidden>
+<dialog id="help">
+  <h2>Keyboard shortcuts and mouse</h2>
+  <div class="cols">
+    <div><kbd>O</kbd> open file</div><div><kbd>T</kbd> dark / light theme</div>
+    <div><kbd>F</kbd> fit whole dump</div><div><kbd>Z</kbd> zoom to cursors A&harr;B</div>
+    <div><kbd>+</kbd> / <kbd>-</kbd> zoom in / out</div><div><kbd>&larr;</kbd> <kbd>&rarr;</kbd> pan (Shift = faster)</div>
+    <div><kbd>Home</kbd> / <kbd>End</kbd> go to start / end</div><div><kbd>/</kbd> search signals</div>
+    <div><kbd>N</kbd> / <kbd>P</kbd> next / previous edge</div><div><kbd>]</kbd> / <kbd>[</kbd> next / previous value match</div>
+    <div><kbd>R</kbd> cycle radix (bin, hex, dec, signed)</div><div><kbd>G</kbd> analog view for selected bus</div>
+    <div><kbd>&uarr;</kbd> <kbd>&darr;</kbd> select signal row</div><div><kbd>Alt</kbd>+<kbd>&uarr;</kbd>/<kbd>&darr;</kbd> move row</div>
+    <div><kbd>Del</kbd> remove selected signal</div><div><kbd>C</kbd> clear cursors</div>
+    <div><kbd>E</kbd> export PNG</div><div><kbd>Shift</kbd>+<kbd>E</kbd> export text summary</div>
+    <div><kbd>L</kbd> copy share link</div><div><kbd>?</kbd> this help</div>
+  </div>
+  <p class="note">Mouse: click = cursor A (snaps to edges of the clicked row), Shift+click = cursor B, drag = pan, Ctrl/Cmd + wheel = zoom at pointer, Shift + wheel = pan, wheel = scroll rows, drag in the ruler = zoom to range.</p>
+  <p class="note">Value search: type a value in the signal's current radix, or with a prefix: <code>0x1F</code>, <code>0b1010</code>, <code>'d42</code>, or <code>x</code> / <code>z</code> for any unknown / high-impedance bit.</p>
+  <div class="row"><span class="spacer"></span><button id="helpClose" class="primary">Close</button></div>
+</dialog>
